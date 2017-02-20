@@ -11,6 +11,7 @@ class RunTests {
         document.body.appendChild(new Example({ foo: 4 }).toElement());
         if (document.querySelector('body>div>h1').innerHTML != '4')
           throw 'test failed';
+        travix.Logger.println('... works');
         0;
       }
       catch (e:Dynamic) {
