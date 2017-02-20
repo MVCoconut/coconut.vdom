@@ -13,7 +13,7 @@
   ],
   "releasenote": "initial release",
   "version": "0.0.0",
-  "url": "https://github.com/MVCoconut/coconut/",
+  "url": "https://github.com/MVCoconut/coconut.vdom/",
   "dependencies": {
     "tink_state": "",
     "tink_hxx": "",
