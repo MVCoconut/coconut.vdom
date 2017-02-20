@@ -8,11 +8,7 @@ os:
   
 haxe:
   - "3.2.1"
-  - development
-  
-matrix:
-  allow_failures:
-    - haxe: development
+  - "3.4.0"
     
 install:
   - haxelib install travix

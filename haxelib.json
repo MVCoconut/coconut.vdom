@@ -1,9 +1,11 @@
 {
-  "name": "coconut",
+  "name": "coconut.vdom",
   "license": "MIT",
   "tags": [
     "ui",
-    "js"
+    "js",
+    "coconut",
+    "reactive"
   ],
   "classPath": "src",
   "contributors": [
@@ -11,13 +13,11 @@
   ],
   "releasenote": "initial release",
   "version": "0.0.0",
-  "url": "https://github.com/back2dos/coconut/",
+  "url": "https://github.com/MVCoconut/coconut/",
   "dependencies": {
     "tink_state": "",
     "tink_hxx": "",
-    "tink_lang": "",
     "tink_csss": "",
-    "tink_pure": "",
     "js-virtual-dom": ""
   }
 }

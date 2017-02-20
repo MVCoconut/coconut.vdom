@@ -1,4 +1,4 @@
-package coconut.ui;
+package coconut.vdom;
 
 #if !macro
 import js.html.Element;
@@ -8,15 +8,16 @@ import vdom.Attr.Key;
 import vdom.VDom.*;
 import vdom.*;
 
+@:build(coconut.vdom.macros.Setup.forwardCalls())
 class Renderable extends Widget {
   
-  var rendered:Observable<VNode>;
-  var element:Element;
-  var binding:CallbackLink;
-  var last:VNode;
+  @:noCompletion var rendered:Observable<VNode>;
+  @:noCompletion var element:Element;
+  @:noCompletion var binding:CallbackLink;
+  @:noCompletion var last:VNode;
   
   static var keygen = 0;
-  @:keep var key:Key;
+  @:noCompletion @:keep var key:Key;
   
   public function new(rendered, ?key:Key) {
     this.rendered = rendered;
@@ -25,11 +26,8 @@ class Renderable extends Widget {
       
     this.key = key;
   }
-      
-  function SIDE_EFFECT<T>(v:T):VNode return null;
-  
-  override public function init():Element {
-    //trace('init ' + Type.getClassName(Type.getClass(this)));
+        
+  @:noCompletion override public function init():Element {
     last = rendered.value;
     this.element = create(last);
     
@@ -38,12 +36,12 @@ class Renderable extends Widget {
     return this.element;
   }
   
-  function setupBinding()
+  @:noCompletion function setupBinding()
     this.binding = this.rendered.bind(function (next) {
       if (next != last) apply(next);
     });
   
-  function apply(next) {
+  @:noCompletion function apply(next) {
     var changes = diff(last, next);
     beforeUpdate();
     this.element = patch(element, changes);
@@ -57,10 +55,10 @@ class Renderable extends Widget {
       case v: v;
     } 
    
-  function beforeUpdate() {}
-  function afterUpdate() {}
+  @:noCompletion function beforeUpdate() {}
+  @:noCompletion function afterUpdate() {}
   
-  override public function update(x:{}, y):Element {
+  @:noCompletion override public function update(x:{}, y):Element {
     switch Std.instance(x, Type.getClass(this)) {
       case null:
       case v:
@@ -74,6 +72,7 @@ class Renderable extends Widget {
   }
   
   macro function get(_, e);
+  macro function hxx(e);
 
   override public function destroy():Void {
     this.binding.dissolve();
@@ -81,25 +80,11 @@ class Renderable extends Widget {
   }  
 }
 #else
-import haxe.macro.Expr;
-using tink.MacroApi;
-
 class Renderable {
-  static var tags = [
-    'a' => macro : js.html.AnchorElement,
-    'input' => macro : js.html.InputElement,
-    'iframe' => macro : js.html.IFrameElement,    
-    'img' => macro : js.html.ImageElement,    
-    'button' => macro : js.html.ButtonElement,    
-  ];
  
-  macro function get(_, e:Expr) {
-    var type = 
-      switch tink.csss.Parser.parse(e.getString().sure(), e.pos).sure() {
-        case [tags[Std.string(_[_.length - 1].tag)] => v] if (v != null): v;
-        default: macro : js.html.Element;
-      }
-    return macro (cast this.element.querySelector($e) : $type);
-  }    
+  macro function get(_, e) 
+    return coconut.vdom.macros.Select.typed(e);
+  macro function hxx(_, e)
+    return vdom.VDom.hxx(e);
 }
 #end
