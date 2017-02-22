@@ -33,10 +33,11 @@ class Setup {
   static function all() {
     defineType({
       pack: ['coconut', 'ui'],
-      name: 'Renderable',
+      name: 'ViewBase',
+      params: [{ name: 'Data' }, { name: 'Presented' }],
       pos: (macro null).pos,
       fields: [],
-      kind: TDAlias(macro : coconut.vdom.Renderable),
+      kind: TDAlias(macro : coconut.vdom.ViewBase<Data, Presented>),
     });
   }
 }

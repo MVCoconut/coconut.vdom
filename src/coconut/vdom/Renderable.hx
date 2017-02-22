@@ -59,16 +59,19 @@ class Renderable extends Widget {
   @:noCompletion function afterUpdate() {}
   
   @:noCompletion override public function update(x:{}, y):Element {
-    switch Std.instance(x, Type.getClass(this)) {
+    switch Std.instance(x, Renderable) {
       case null:
-      case v:
-        this.element = y;
-        this.last = v.last;
-        apply(rendered);
-        setupBinding();
+      case v: reuseRender(v);
     }
-    
     return toElement();
+  }
+
+  @:noCompletion private function reuseRender(that:Renderable) {
+    this.element = that.element;
+    this.last = that.last;
+    apply(rendered);
+    setupBinding();
+    that.destroy();
   }
   
   macro function get(_, e);
