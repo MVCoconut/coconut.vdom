@@ -23,7 +23,7 @@ class RunTests {
   
 }
 
-class Example extends coconut.ui.Renderable {
+class Example extends coconut.vdom.Renderable {
   public function new(o:tink.state.Observable<{ foo:Int}>) {
     super(o.map(function (state) return hxx('
       <div>
