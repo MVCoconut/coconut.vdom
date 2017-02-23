@@ -89,7 +89,7 @@ class Renderable {
     return coconut.vdom.macros.Select.typed(e);
   macro function hxx(_, e) 
     return 
-      #if (coconut_ui)
+      #if coconut_ui
         coconut.ui.macros.HXX.parse(e);
       #else
         vdom.VDom.hxx(e);

@@ -30,15 +30,20 @@ class Setup {
       }
     return ret;
   }
+  static var defined = false;
   static function all() {
-    defineType({
-      pack: ['coconut', 'ui'],
-      name: 'ViewBase',
-      params: [{ name: 'Data' }, { name: 'Presented' }],
-      pos: (macro null).pos,
-      fields: [],
-      kind: TDAlias(macro : coconut.vdom.ViewBase<Data, Presented>),
-    });
+    if (!defined) {
+      defined = true;
+      coconut.ui.macros.HXX.options = vdom.VDom.options;      
+      defineType({
+        pack: ['coconut', 'ui'],
+        name: 'ViewBase',
+        params: [{ name: 'Data' }, { name: 'Presented' }],
+        pos: (macro null).pos,
+        fields: [],
+        kind: TDAlias(macro : coconut.vdom.ViewBase<Data, Presented>),
+      });
+    }
   }
 }
 #end
