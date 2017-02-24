@@ -11,74 +11,77 @@ import vdom.*;
 @:build(coconut.vdom.macros.Setup.forwardCalls())
 class Renderable extends Widget {
   
-  @:noCompletion var rendered:Observable<VNode>;
-  @:noCompletion var element:Element;
-  @:noCompletion var binding:CallbackLink;
-  @:noCompletion var last:VNode;
+  @:noCompletion var __rendered:Observable<VNode>;
+  @:noCompletion var __dom:Element;
+  @:noCompletion var __binding:CallbackLink;
+  @:noCompletion var __lastRender:VNode;
   
   static var keygen = 0;
   @:noCompletion @:keep var key:Key;
   
   public function new(rendered, ?key:Key) {
-    this.rendered = rendered;
+    this.__rendered = rendered;
     if (key == null)
-      key = rendered;
+      key = __rendered;
       
     this.key = key;
   }
         
   @:noCompletion override public function init():Element {
-    last = rendered.value;
-    this.element = create(last);
+    __lastRender = __rendered.value;
+    this.beforeInit();
+    this.__dom = create(__lastRender);
+    this.afterInit(__dom);
+    __setupBinding();
     
-    setupBinding();
-    
-    return this.element;
+    return this.__dom;
   }
   
-  @:noCompletion function setupBinding()
-    this.binding = this.rendered.bind(function (next) {
-      if (next != last) apply(next);
+  @:noCompletion function __setupBinding()
+    this.__binding = this.__rendered.bind(function (next) {
+      if (next != __lastRender) __apply(next);
     });
   
-  @:noCompletion function apply(next) {
-    var changes = diff(last, next);
-    beforeUpdate();
-    this.element = patch(element, changes);
-    last = next;
-    afterUpdate();
+  @:noCompletion function __apply(next) {
+    var changes = diff(__lastRender, next);
+    beforePatching(this.__dom);
+    this.__dom = patch(__dom, changes);
+    __lastRender = next;
+    afterPatching(this.__dom);
   }
     
   public function toElement() 
-    return switch element {
+    return switch __dom {
       case null: init();
       case v: v;
     } 
-   
-  @:noCompletion function beforeUpdate() {}
-  @:noCompletion function afterUpdate() {}
+
+  @:noCompletion function beforeInit() {}
+  @:noCompletion function afterInit(element:Element) {}
+  @:noCompletion function beforePatching(element:Element) {}
+  @:noCompletion function afterPatching(element:Element) {}
   
   @:noCompletion override public function update(x:{}, y):Element {
     switch Std.instance(x, Renderable) {
       case null:
-      case v: reuseRender(v);
+      case v: __reuseRender(v);
     }
     return toElement();
   }
 
-  @:noCompletion private function reuseRender(that:Renderable) {
-    this.element = that.element;
-    this.last = that.last;
-    apply(rendered);
-    setupBinding();
+  @:noCompletion private function __reuseRender(that:Renderable) {
+    this.__dom = that.__dom;
+    this.__lastRender = that.__lastRender;
+    __apply(__rendered);
+    __setupBinding();
     that.destroy();
   }
   
   macro function get(_, e);
   macro function hxx(e);
 
-  override public function destroy():Void {
-    this.binding.dissolve();
+  @:noCompletion override public function destroy():Void {
+    this.__binding.dissolve();
     super.destroy();
   }  
 }

@@ -10,7 +10,7 @@ class ViewBase<Original, Presented> extends Renderable {
       __beforeExtract();
       var nu = extract(data);
       return 
-        if (__lastPresented != null && compare(nu, __lastPresented)) last;
+        if (__lastPresented != null && compare(nu, __lastPresented)) __lastRender;
         else renderer(__lastPresented = nu);
     }), key);
   }

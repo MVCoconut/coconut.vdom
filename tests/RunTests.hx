@@ -1,5 +1,6 @@
 package ;
 
+import js.html.Element;
 import js.Browser.*;
 
 class RunTests {
@@ -30,5 +31,12 @@ class Example extends coconut.vdom.Renderable {
         <h1>{state.foo}</h1>
       </div>
     ')));
+  }
+
+  override function afterInit(_) {
+    if (false) {
+      trace(get('a').href);
+      trace(get('button').disabled);
+    }
   }
 }

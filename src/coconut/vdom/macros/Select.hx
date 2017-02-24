@@ -1,5 +1,6 @@
 package coconut.vdom.macros;
 
+#if macro
 import haxe.macro.Expr;
 using tink.MacroApi;
 
@@ -17,6 +18,7 @@ class Select {
         case [tags[Std.string(_[_.length - 1].tag)] => v] if (v != null): v;
         default: macro : js.html.Element;
       }
-    return macro (cast this.element.querySelector($e) : $type);      
+    return macro @:pos(e.pos) (cast this.__dom.querySelector($e) : $type);      
   }
 }
+#end
