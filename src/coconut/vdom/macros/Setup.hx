@@ -32,6 +32,7 @@ class Setup {
   }
   static var defined = false;
   static function all() {
+    #if coconut_ui
     if (!defined) {
       defined = true;
       coconut.ui.macros.HXX.options = vdom.VDom.options;      
@@ -44,6 +45,7 @@ class Setup {
         kind: TDAlias(macro : coconut.vdom.ViewBase<Data, Presented>),
       });
     }
+    #end
   }
 }
 #end
