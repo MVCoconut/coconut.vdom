@@ -34,15 +34,24 @@ class Setup {
   static function all() {
     #if coconut_ui
     if (!defined) {
+      
       defined = true;
       coconut.ui.macros.HXX.options = vdom.VDom.options;      
+
       defineType({
         pack: ['coconut', 'ui'],
-        name: 'ViewBase',
-        params: [{ name: 'Data' }, { name: 'Presented' }],
+        name: 'Renderable',
         pos: (macro null).pos,
         fields: [],
-        kind: TDAlias(macro : coconut.vdom.ViewBase<Data, Presented>),
+        kind: TDAlias(macro : coconut.vdom.Renderable),
+      });
+
+      defineType({
+        pack: ['coconut', 'ui'],
+        name: 'RenderResult',
+        pos: (macro null).pos,
+        fields: [],
+        kind: TDAlias(macro : vdom.VNode),
       });
     }
     #end
