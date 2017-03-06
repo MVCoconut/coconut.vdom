@@ -3,7 +3,9 @@ package coconut.vdom.macros;
 #if macro
 import haxe.macro.Context.*;
 import haxe.macro.Expr;
+
 using haxe.macro.Tools;
+using tink.MacroApi;
 
 class Setup {
   static function forwardCalls() {
@@ -38,21 +40,23 @@ class Setup {
       defined = true;
       coconut.ui.macros.HXX.options = vdom.VDom.options;      
 
-      defineType({
-        pack: ['coconut', 'ui'],
-        name: 'Renderable',
-        pos: (macro null).pos,
-        fields: [],
-        kind: TDAlias(macro : coconut.vdom.Renderable),
-      });
+      if ('coconut.ui.Renderable'.definedType() == None)
+        defineType({
+          pack: ['coconut', 'ui'],
+          name: 'Renderable',
+          pos: (macro null).pos,
+          fields: [],
+          kind: TDAlias(macro : coconut.vdom.Renderable),
+        });
 
-      defineType({
-        pack: ['coconut', 'ui'],
-        name: 'RenderResult',
-        pos: (macro null).pos,
-        fields: [],
-        kind: TDAlias(macro : vdom.VNode),
-      });
+      if ('coconut.ui.RenderResult'.definedType() == None)
+        defineType({
+          pack: ['coconut', 'ui'],
+          name: 'RenderResult',
+          pos: (macro null).pos,
+          fields: [],
+          kind: TDAlias(macro : vdom.VNode),
+        });
     }
     #end
   }
