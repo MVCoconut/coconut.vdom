@@ -57,6 +57,14 @@ class Setup {
           fields: [],
           kind: TDAlias(macro : vdom.VNode),
         });
+
+      switch getType('vdom.VNode').reduce() {
+        case TInst(_.get().meta => meta, _) | 
+             TAbstract(_.get().meta => meta, _):
+          if (!meta.has(':observable'))
+            meta.add(':observable', [], (macro null).pos);
+        default:
+      }
     }
     #end
   }
