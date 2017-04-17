@@ -65,25 +65,6 @@ Once a view is initialized, it begins to observe the data it is meant to render.
 
 Note that changes to the DOM may lead to the strangest effects. Perform them at your own risk. The before/after patching methods are primarily meant for dealing with scroll position, focus and similar state that is not reflected in the DOM structure directly.
 
-### View Recreation
-
-If a view is created by another view on render, it actually gets recreated:
-
-```haxe
-class ItemView extends View<Item> { /* some implementation */}
-class ListView extends View<coconut.data.List<Item>> {
-  function render(list) '
-    <ul>
-      <for {item in list}>
-        <li><Item {...item} /></li>
-      </for>
-    </ul>
-  ';
-}
-```
-
-Every time a `ListView` rerenders, it generates new `ItemView`s. The newly created child views do get all the state and cache of the views they replace, so the replacement itself is very cheap. It still happens though, and if you see views being replaced, then this is why. This behavior is highly likely to change in the future though, meaning that view replacement will not occur.
-
 ## Event Handling
 
 Event handling in `coconut.vdom` is fully typed, meaning that the event type and the event target are what you'd actually expect them to be:
