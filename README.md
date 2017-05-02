@@ -47,8 +47,8 @@ Every view has the following life cycle hooks that you may override:
 ```haxe
 function beforeInit():Void;
 function afterInit(element:Element):Void;
-function beforePatch(element:Element):Void;
-function afterPatch(element:Element):Void;
+function beforePatching(element:Element):Void;
+function afterPatching(element:Element):Void;
 ```
 
 Views are initialized in two cases:
