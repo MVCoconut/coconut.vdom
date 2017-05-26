@@ -2,6 +2,7 @@ package ;
 
 import js.html.Element;
 import js.Browser.*;
+import coconut.Ui;
 
 class RunTests {
 

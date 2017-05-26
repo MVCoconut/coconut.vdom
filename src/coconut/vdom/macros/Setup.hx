@@ -38,7 +38,13 @@ class Setup {
     if (!defined) {
       
       defined = true;
-      coconut.ui.macros.HXX.options = vdom.VDom.options;      
+
+      coconut.ui.macros.HXX.options = {
+        child: vdom.VDom.options.child,
+        customAttributes: vdom.VDom.options.customAttributes,
+        flatten: Reflect.field(vdom.VDom.options, 'flatten'),
+        interceptClass: null,
+      }
 
       if ('coconut.ui.Renderable'.definedType() == None)
         defineType({
