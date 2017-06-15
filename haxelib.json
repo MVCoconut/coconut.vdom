@@ -15,6 +15,7 @@
 	"version": "0.4.1",
 	"url": "https://github.com/MVCoconut/coconut.vdom/",
 	"dependencies": {
+		"coconut.ui": "",
 		"tink_hxx": "",
 		"tink_state": "",
 		"tink_csss": "",
