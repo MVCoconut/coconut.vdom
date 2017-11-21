@@ -83,6 +83,21 @@ class Renderable extends Widget {
   @:noCompletion override public function destroy():Void {
     this.__binding.dissolve();
     super.destroy();
+    
+    function _destroy(v:VNode) {
+      switch ((cast v).children:Array<Dynamic>) {
+        case null:
+        case children:
+          for(child in children) {
+            switch Std.instance(child, Widget) {
+              case null:
+              case v: v.destroy();
+            }
+            _destroy(child);
+          }
+      }
+    }
+    _destroy(__lastRender);
   }  
 }
 #else
