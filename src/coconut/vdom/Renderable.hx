@@ -60,6 +60,8 @@ class Renderable extends Widget {
   @:noCompletion function afterInit(element:Element) {}
   @:noCompletion function beforePatching(element:Element) {}
   @:noCompletion function afterPatching(element:Element) {}
+  @:noCompletion function beforeDestroy(element:Element) {}
+  @:noCompletion function afterDestroy(element:Element) {}
   
   @:noCompletion override public function update(x:{}, y):Element {
     switch Std.instance(x, Renderable) {
@@ -81,6 +83,7 @@ class Renderable extends Widget {
   macro function hxx(e);
 
   @:noCompletion override public function destroy():Void {
+    beforeDestroy(this.__dom);
     this.__binding.dissolve();
     super.destroy();
     
@@ -98,6 +101,7 @@ class Renderable extends Widget {
       }
     }
     _destroy(__lastRender);
+    afterDestroy(this.__dom);
   }  
 }
 #else
