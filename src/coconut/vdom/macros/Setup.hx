@@ -7,6 +7,8 @@ import haxe.macro.Expr;
 using haxe.macro.Tools;
 using tink.MacroApi;
 
+private class Generator extends coconut.ui.macros.Generator {}
+
 class Setup {
   static function forwardCalls() {
     var ret = getBuildFields();
@@ -39,7 +41,7 @@ class Setup {
       
       defined = true;
 
-      coconut.ui.macros.HXX.options = vdom.VDom.options;
+      coconut.ui.macros.HXX.generator = new Generator();
 
       if ('coconut.ui.Renderable'.definedType() == None)
         defineType({
