@@ -10,8 +10,11 @@ using tink.MacroApi;
 private class Generator extends coconut.ui.macros.Generator {}
 
 class Setup {
-  static function forwardCalls() {
-    var ret = getBuildFields();
+  static function forwardCalls() 
+    return getBuildFields().concat(tags);
+  
+  static var tags = {
+    var ret = [];
     for (f in getType('vdom.VDom').getClass().statics.get())
       switch f {
         case { isPublic: true, kind: FMethod(MethInline) }:
@@ -31,8 +34,8 @@ class Setup {
             default: throw 'assert';
           }
         default:
-      }
-    return ret;
+      } 
+    ret;   
   }
   static var defined = false;
   static function all() {
