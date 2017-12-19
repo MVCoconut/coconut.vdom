@@ -3,6 +3,7 @@ package ;
 import js.html.Element;
 import js.Browser.*;
 import coconut.Ui;
+import coconut.vdom.*;
 
 class RunTests {
 
@@ -25,9 +26,9 @@ class RunTests {
   
 }
 
-class Example extends coconut.vdom.Renderable {
+class Example extends Renderable {
   public function new(o:tink.state.Observable<{ foo:Int}>) {
-    super(o.map(function (state) return hxx('
+    super(o.map(function (state):RenderResult return hxx('
       <div>
         <h1>{state.foo}</h1>
       </div>
