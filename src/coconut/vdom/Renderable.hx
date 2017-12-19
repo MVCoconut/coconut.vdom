@@ -11,7 +11,7 @@ import vdom.*;
 @:build(coconut.vdom.macros.Setup.forwardCalls())
 class Renderable extends Widget {
   
-  @:noCompletion var __rendered:Observable<VNode>;
+  @:noCompletion var __rendered:Observable<RenderResult>;
   @:noCompletion var __dom:Element;
   @:noCompletion var __binding:CallbackLink;
   @:noCompletion var __lastRender:VNode;

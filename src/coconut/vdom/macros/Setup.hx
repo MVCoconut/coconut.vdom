@@ -61,7 +61,7 @@ class Setup {
           name: 'RenderResult',
           pos: (macro null).pos,
           fields: [],
-          kind: TDAlias(macro : vdom.VNode),
+          kind: TDAlias(macro : coconut.vdom.RenderResult),
         });
 
       switch getType('vdom.VNode').reduce() {
