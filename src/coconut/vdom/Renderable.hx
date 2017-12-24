@@ -8,23 +8,18 @@ import vdom.Attr.Key;
 import vdom.VDom.*;
 import vdom.*;
 
-@:build(coconut.vdom.macros.Setup.forwardCalls())
 class Renderable extends Widget {
   
-  @:noCompletion var __rendered:Observable<RenderResult>;
+  @:noCompletion var __rendered:Observable<coconut.ui.RenderResult>;
   @:noCompletion var __dom:Element;
   @:noCompletion var __binding:CallbackLink;
   @:noCompletion var __lastRender:VNode;
   
   static var keygen = 0;
-  @:noCompletion @:keep var key:Key;
+  @:noCompletion @:keep var key:Key = keygen++;
   
-  public function new(rendered, ?key:Key) {
+  public function new(rendered) {
     this.__rendered = rendered;
-    if (key == null)
-      key = __rendered;
-      
-    this.key = key;
   }
         
   @:noCompletion override public function init():Element {
