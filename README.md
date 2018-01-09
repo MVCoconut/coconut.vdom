@@ -49,6 +49,8 @@ function beforeInit():Void;
 function afterInit(element:Element):Void;
 function beforePatching(element:Element):Void;
 function afterPatching(element:Element):Void;
+function beforeDestroy(element:Element):Void;
+function afterDestroy(element:Element):Void;
 ```
 
 Views are initialized in two cases:

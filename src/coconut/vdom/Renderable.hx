@@ -55,6 +55,8 @@ class Renderable extends Widget {
   @:noCompletion function afterInit(element:Element) {}
   @:noCompletion function beforePatching(element:Element) {}
   @:noCompletion function afterPatching(element:Element) {}
+  @:noCompletion function beforeDestroy(element:Element) {}
+  @:noCompletion function afterDestroy(element:Element) {}
   
   @:noCompletion override public function update(x:{}, y):Element {
     switch Std.instance(x, Renderable) {
@@ -76,8 +78,25 @@ class Renderable extends Widget {
   macro function hxx(e);
 
   @:noCompletion override public function destroy():Void {
+    beforeDestroy(this.__dom);
     this.__binding.dissolve();
     super.destroy();
+    
+    function _destroy(v:VNode) {
+      switch ((cast v).children:Array<Dynamic>) {
+        case null:
+        case children:
+          for(child in children) {
+            switch Std.instance(child, Widget) {
+              case null:
+              case v: v.destroy();
+            }
+            _destroy(child);
+          }
+      }
+    }
+    _destroy(__lastRender);
+    afterDestroy(this.__dom);
   }  
 }
 #else
