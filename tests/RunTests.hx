@@ -3,6 +3,7 @@ package ;
 import js.html.Element;
 import js.Browser.*;
 import coconut.Ui;
+import coconut.ui.*;
 import coconut.vdom.*;
 
 class RunTests {
