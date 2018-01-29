@@ -16,7 +16,7 @@ class Renderable extends Widget {
   @:noCompletion var __lastRender:VNode;
   
   static var keygen = 0;
-  @:noCompletion @:keep var key:Key = keygen++;
+  @:noCompletion @:keep @:native('key') var virtualDomKey:Key = keygen++;
   
   public function new(rendered) {
     this.__rendered = rendered;
