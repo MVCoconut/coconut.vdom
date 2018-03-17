@@ -1,5 +1,7 @@
 # Coconut VDOM Renderer
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/MVCoconut/Lobby)
+
 This library provides [`js-virtual-dom`](https://github.com/back2dos/js-virtual-dom) based renderering to coconut.
 
 ## Adding a View to the DOM
