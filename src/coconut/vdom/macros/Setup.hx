@@ -11,7 +11,7 @@ using tink.MacroApi;
 
 class Setup {
   static function all() 
-    coconut.ui.macros.HXX.generator = new Generator(vdom.VDom.generator.resolvers);
+    coconut.ui.macros.HXX.generator = new Generator(vdom.VDom.allTags);
   
 }
 #end
