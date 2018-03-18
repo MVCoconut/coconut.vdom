@@ -4,28 +4,26 @@ package coconut.vdom;
 import js.html.Element;
 import tink.CoreApi;
 import tink.state.Observable;
-import vdom.Attr.Key;
-import vdom.VDom.*;
-import vdom.*;
 
 class Renderable extends Widget {
   
   @:noCompletion var __rendered:Observable<coconut.ui.RenderResult>;
   @:noCompletion var __dom:Element;
   @:noCompletion var __binding:CallbackLink;
-  @:noCompletion var __lastRender:VNode;
+  @:noCompletion var __lastRender:coconut.ui.RenderResult;
   
   static var keygen = 0;
-  @:noCompletion @:keep @:native('key') var virtualDomKey:Key = keygen++;
+  // @:noCompletion @:keep @:native('key') var virtualDomKey:Key = keygen++;
   
   public function new(rendered) {
     this.__rendered = rendered;
+    super(Std.string(keygen++));
   }
         
-  @:noCompletion override public function init():Element {
+  @:noCompletion override public function init() {
     __lastRender = __rendered.value;
     this.beforeInit();
-    this.__dom = create(__lastRender);
+    this.__dom = @:privateAccess cast VDom.createNode(__lastRender);
     this.afterInit(__dom);
     __setupBinding();
     
@@ -38,9 +36,9 @@ class Renderable extends Widget {
     });
   
   @:noCompletion function __apply(next) {
-    var changes = diff(__lastRender, next);
     beforePatching(this.__dom);
-    this.__dom = patch(__dom, changes);
+    // this.__dom = 
+    @:privateAccess VDom.updateNode(__dom, next, __lastRender);
     __lastRender = next;
     afterPatching(this.__dom);
   }
@@ -58,46 +56,30 @@ class Renderable extends Widget {
   @:noCompletion function beforeDestroy(element:Element) {}
   @:noCompletion function afterDestroy(element:Element) {}
   
-  @:noCompletion override public function update(x:{}, y):Element {
-    switch Std.instance(x, Renderable) {
-      case null:
-      case v: __reuseRender(v);
-    }
-    return toElement();
-  }
-
-  @:noCompletion private function __reuseRender(that:Renderable) {
-    this.__dom = that.__dom;
-    this.__lastRender = that.__lastRender;
-    __apply(__rendered);
-    __setupBinding();
-    that.destroy();
-  }
-  
   macro function get(_, e);
   macro function hxx(e);
 
-  @:noCompletion override public function destroy():Void {
-    beforeDestroy(this.__dom);
-    this.__binding.dissolve();
-    super.destroy();
+  // @:noCompletion override public function destroy():Void {
+  //   beforeDestroy(this.__dom);
+  //   this.__binding.dissolve();
+  //   super.destroy();
     
-    function _destroy(v:VNode) {
-      switch ((cast v).children:Array<Dynamic>) {
-        case null:
-        case children:
-          for(child in children) {
-            switch Std.instance(child, Widget) {
-              case null:
-              case v: v.destroy();
-            }
-            _destroy(child);
-          }
-      }
-    }
-    _destroy(__lastRender);
-    afterDestroy(this.__dom);
-  }  
+  //   function _destroy(v:VNode) {
+  //     switch ((cast v).children:Array<Dynamic>) {
+  //       case null:
+  //       case children:
+  //         for(child in children) {
+  //           switch Std.instance(child, Widget) {
+  //             case null:
+  //             case v: v.destroy();
+  //           }
+  //           _destroy(child);
+  //         }
+  //     }
+  //   }
+  //   _destroy(__lastRender);
+  //   afterDestroy(this.__dom);
+  // }  
 }
 #else
 class Renderable {
