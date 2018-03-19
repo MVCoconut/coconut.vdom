@@ -11,27 +11,22 @@ class VDom {
     return ({ 
       t: type, 
       k: if (attributes == null) null else untyped attributes.key, 
-      a: if (attributes == null) EMPTY else attributes, 
+      a: attributes, 
       c: children 
     });
 
-	static public function createNode(c:Child):Node {
+	static function createNode(c:Child):Node {
 		return 
       if (c.isWidget) (cast c:Widget).init();
-      else if (c.isText) document.createTextNode(c.k);
+      else if (c.isText) document.createTextNode(c.key);
       else {
-        var ret = document.createElement(c.t),
-            attributes = c.a;
+        var ret = document.createElement(c.type),
+            attributes = c.attributes;
 
-        for (attr in attributes.keys())
-          setProp(ret, attr, attributes[attr]);
+        updateElement(ret, attributes, null);
         
-        switch c.c {
-          case null:
-          case children:
-            for (c in children) if (c != null)
-              ret.appendChild(createNode(c));
-        }
+        for (c in c.children) if (c != null)
+          ret.appendChild(createNode(c));
 
         return ret;
       }
@@ -101,11 +96,10 @@ class VDom {
   static public inline function script(attr: ScriptAttr, ?children:Children):Child return h('script', attr, children);
 
 	static function updateNode(domNode:Node, newNode:Child, oldNode:Child) {
-		//TODO: key handling
-		if (newNode == oldNode) return;
-
+		if (newNode == oldNode) return domNode;
+    var ret = domNode;
     function replace(with)
-      domNode.parentNode.replaceChild(with, domNode);
+      domNode.parentNode.replaceChild(ret = with, domNode);
 
 		switch [newNode.isWidget, oldNode.isWidget] {
       case [true, true]:
@@ -115,7 +109,7 @@ class VDom {
         replace(n.update(o, cast domNode));
 
       case [false, false]:
-        if (newNode.t != oldNode.t) 
+        if (newNode.type != oldNode.type) 
           replace(createNode(newNode));//TODO: consider preserving children
         else if (newNode.isText) {
           if (newNode.key != oldNode.key)//oldNode is text too, so `key` is the text content
@@ -124,10 +118,34 @@ class VDom {
         else {
           var elt:Element = cast domNode;
           
-          updateProps(elt, newNode.a, oldNode.a);
+          updateElement(elt, newNode.attributes, oldNode.attributes);
 
-          var newChildren = newNode.c,
-              oldChildren = oldNode.c;
+          var oldChildren = oldNode.children;
+
+          var newChildren = {
+            //TODO: this doesn't handle the case that nodes from the old and new child list are physically equal
+            var oldKeys = [for (c in oldChildren) if (c.key != null) c.key => true];
+            var newWithKeys = new Map();
+            var keylessNew = [for (c in newNode.children) 
+              if (c.key != null && oldKeys[c.key]) {
+                newWithKeys[c.key] = c;//TODO: deal with duplicate keys
+                continue;
+              }
+              else c
+            ];
+            keylessNew.reverse();
+            
+            [for (i in 0...newNode.children.length) 
+              switch oldChildren[i] {
+                case null | { key: null }: keylessNew.pop();
+                case { key: k }:
+                  switch newWithKeys[k] {
+                    case null: keylessNew.pop();
+                    case v: v;
+                  }
+              }
+            ];
+          }
 
 				  var newLength = newChildren.length,
               oldLength = oldChildren.length;
@@ -142,43 +160,52 @@ class VDom {
             for (i in max...newLength)
               elt.appendChild(createNode(newChildren[i]));
           else
-            for (i in max...newLength)
+            for (i in max...oldLength)
               elt.removeChild(elt.childNodes[max]);       
         }
       case [false, true]:
-        (cast oldNode:Widget).destroy(cast domNode);
+        (cast oldNode:Widget).destroy();
         replace(createNode(newNode));
       case [true, false]:
         replace((cast newNode:Widget).init());
     }
+    return ret;
 	}
 
-	static function setProp(element:Element, name:String, newVal:Dynamic)
+	static function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
 		switch name {
       case 'key':
       case 'attributes':
+        updateObject(element, newVal, oldVal, updateAttribute);
       default:
-        Reflect.setField(element, name, newVal);
-    }
-	
-  static function removeProp(element:Element, name:String)
-		switch name {
-      case 'key':
-      case 'attributes': 
-      default: js.Syntax.delete(element, name);
+        if (newVal == null)
+          js.Syntax.delete(element, name);
+        else      
+          Reflect.setField(element, name, newVal);
     }
 		
-	static inline function updateProp(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
-    if (newVal == null) 
-      removeProp(element, name);
-    else if (oldVal == null || newVal != oldVal) 
-      setProp(element, name, oldVal);
+	static function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
+    if (newVal == null) element.removeAttribute(name);
+    else element.setAttribute(name, newVal);
+
+	static function updateProp(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
+    if (oldVal != newVal) 
+      setProp(element, name, newVal, oldVal);
 	
-	static function updateProps(element:Element, newProps:Dict<Any>, oldProps:Dict<Any>) {
-		var keys:Dynamic<Bool> = {}
+	static function updateElement(element:Element, newProps:Dict<Any>, oldProps:Dict<Any>) 
+    updateObject(element, newProps, oldProps, updateProp);
+
+	static function updateObject<Target>(element:Target, newProps:Dict<Any>, oldProps:Dict<Any>, updateProp:Target->String->Any->Any->Void) {
+		var keys:Dynamic<Bool> = {};
+    
+    if (newProps == null) newProps = EMPTY;
+    if (oldProps == null) oldProps = EMPTY;
+
 		for(key in newProps.keys()) Reflect.setField(keys, key, true);
 		for(key in oldProps.keys()) Reflect.setField(keys, key, true);
-		for(key in js.Object.getOwnPropertyNames(cast keys)) updateProp(element, key, newProps[key], oldProps[key]);		
+		
+    for(key in js.Object.getOwnPropertyNames(cast keys)) 
+      updateProp(element, key, newProps[key], oldProps[key]);		
 	}    
 }
 

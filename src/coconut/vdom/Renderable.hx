@@ -12,12 +12,11 @@ class Renderable extends Widget {
   @:noCompletion var __binding:CallbackLink;
   @:noCompletion var __lastRender:coconut.ui.RenderResult;
   
-  static var keygen = 0;
-  // @:noCompletion @:keep @:native('key') var virtualDomKey:Key = keygen++;
+  static var keygen:Int = 0;
   
   public function new(rendered) {
     this.__rendered = rendered;
-    super(Std.string(keygen++));
+    super('coconut-widget:' + (keygen++));
   }
         
   @:noCompletion override public function init() {
@@ -37,8 +36,7 @@ class Renderable extends Widget {
   
   @:noCompletion function __apply(next) {
     beforePatching(this.__dom);
-    // this.__dom = 
-    @:privateAccess VDom.updateNode(__dom, next, __lastRender);
+    this.__dom = cast @:privateAccess VDom.updateNode(__dom, next, __lastRender);
     __lastRender = next;
     afterPatching(this.__dom);
   }
@@ -59,27 +57,20 @@ class Renderable extends Widget {
   macro function get(_, e);
   macro function hxx(e);
 
-  // @:noCompletion override public function destroy():Void {
-  //   beforeDestroy(this.__dom);
-  //   this.__binding.dissolve();
-  //   super.destroy();
+  @:noCompletion override public function destroy():Void {
+    beforeDestroy(this.__dom);
+    this.__binding.dissolve();
+    super.destroy();
     
-  //   function _destroy(v:VNode) {
-  //     switch ((cast v).children:Array<Dynamic>) {
-  //       case null:
-  //       case children:
-  //         for(child in children) {
-  //           switch Std.instance(child, Widget) {
-  //             case null:
-  //             case v: v.destroy();
-  //           }
-  //           _destroy(child);
-  //         }
-  //     }
-  //   }
-  //   _destroy(__lastRender);
-  //   afterDestroy(this.__dom);
-  // }  
+    function _destroy(v:Child) 
+      for (c in v.children) {
+        if (c.isWidget) (cast c:Widget).destroy();
+        else _destroy(c);
+      }
+
+    _destroy(__lastRender);
+    afterDestroy(this.__dom);
+  }  
 }
 #else
 class Renderable {

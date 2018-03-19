@@ -1,7 +1,5 @@
 package coconut.vdom;
 
-using StringTools;
-
 abstract ClassName(String) to String {
   
   inline function new(s:String) this = s;
@@ -19,5 +17,5 @@ abstract ClassName(String) to String {
     return new ClassName(parts.map(ofString).join(' '));
 
   @:from static function ofString(s:String):ClassName
-    return new ClassName(s.trim());
+    return new ClassName(untyped s.trim());
 }

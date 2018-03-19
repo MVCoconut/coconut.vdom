@@ -42,13 +42,13 @@ typedef Attr = AttrOf<Element>;
 @:forward
 abstract EventFrom<E:Event, T:Element>(E) from E to E {
   
-  public var target(get, never):Element;
-    inline function get_target():Element
-      return cast this.target;
-
-  public var currentTarget(get, never):T;
-    inline function get_currentTarget():T
+  public var target(get, never):T;
+    inline function get_target():T
       return cast this.currentTarget;
+
+  public var exactTarget(get, never):Element;
+    inline function get_exactTarget():Element
+      return cast this.target;
   
 }
 
@@ -68,7 +68,7 @@ typedef AttrOf<Target:Element> = {
   @:optional var accessKeyLabel(default, never):String;
   @:optional var draggable(default, never):Bool;
   @:optional var spellcheck(default, never):Bool;
-  @:optional var style(default, never):String;
+  @:optional var style(default, never):Style;
   
   @:optional var onwheel(default, never):Callback<EventFrom<WheelEvent, Target>>;
   
