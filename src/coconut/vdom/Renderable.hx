@@ -41,7 +41,7 @@ class Renderable extends Widget {
     afterPatching(this.__dom);
   }
     
-  public function toElement() 
+  public function toElement()
     return switch __dom {
       case null: init();
       case v: v;
