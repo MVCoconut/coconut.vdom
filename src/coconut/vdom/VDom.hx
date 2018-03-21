@@ -130,14 +130,20 @@ class VDom {
     return ret;
 	}
 
+  static function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
+    if (oldVal != newVal) 
+      untyped target[name] = newVal;
+
 	static function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
 		switch name {
       case 'key':
+      case 'style':
+        updateObject(element.style, newVal, oldVal, setField);
       case 'attributes':
         updateObject(element, newVal, oldVal, updateAttribute);
       default:
         if (newVal == null)
-          js.Syntax.delete(element, name);
+          untyped __js__('delete {0}[{1}]', element, name);
         else      
           Reflect.setField(element, name, newVal);
     }
@@ -153,7 +159,7 @@ class VDom {
 	static function updateElement(element:Element, newProps:Dict<Any>, oldProps:Dict<Any>) 
     updateObject(element, newProps, oldProps, updateProp);
 
-	static function updateObject<Target>(element:Target, newProps:Dict<Any>, oldProps:Dict<Any>, updateProp:Target->String->Any->Any->Void) {
+	static inline function updateObject<Target>(element:Target, newProps:Dict<Any>, oldProps:Dict<Any>, updateProp:Target->String->Any->Any->Void) {
 		var keys:Dynamic<Bool> = {};
     
     if (newProps == null) newProps = EMPTY;
@@ -162,7 +168,7 @@ class VDom {
 		for(key in newProps.keys()) Reflect.setField(keys, key, true);
 		for(key in oldProps.keys()) Reflect.setField(keys, key, true);
 		
-    for(key in js.Object.getOwnPropertyNames(cast keys)) 
+    for(key in Dict.getKeys(keys)) 
       updateProp(element, key, newProps[key], oldProps[key]);		
 	}    
 

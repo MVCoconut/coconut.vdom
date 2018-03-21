@@ -5,8 +5,11 @@ abstract Dict<T>(Dynamic<T>) from Dynamic<T> to Dynamic<T> {
 	public inline function new() this = {};
 
 	@:arrayAccess inline function get(key:String):T
-		return js.Syntax.field(this, key);
+		return untyped this[key];
 
-  public inline function keys()
-    return js.Object.getOwnPropertyNames(cast this);
+  public inline function keys():Array<String>
+    return getKeys(cast this);
+
+	static inline public function getKeys(target:Dynamic):Array<String>
+		return untyped Object.getOwnPropertyNames(target);
 }  
