@@ -17,4 +17,7 @@ abstract Children(Array<Child>) {
 
   @:from static inline function ofSingle(c:Child):Children
     return ofArray([c]);
+
+  public inline function toArray()
+    return if (this == null) [] else this.copy();
 }

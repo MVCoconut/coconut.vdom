@@ -12,13 +12,13 @@ using tink.CoreApi;
 class Setup {
   static function all() 
     coconut.ui.macros.HXX.generator = new Generator(function ()
-      return switch getType('coconut.vdom.VDom') {
+      return switch getType('coconut.vdom.Html') {
         case TInst(_.get().statics.get() => statics, _):
           [for (f in statics) if (f.isPublic) switch f.kind {
             case FMethod(MethInline): 
               new Named(
                 f.name, 
-                tink.hxx.Generator.tagDeclaration('coconut.vdom.VDom.${f.name}', f.pos, f.type)
+                tink.hxx.Generator.tagDeclaration('coconut.vdom.Html.${f.name}', f.pos, f.type)
               );
             default: continue;
           }];

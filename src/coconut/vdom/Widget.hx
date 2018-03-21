@@ -3,7 +3,8 @@ package coconut.vdom;
 import js.html.Node;
 
 class Widget {
-  @:noCompletion public var t(default, never):String = 'widget';
+  
+  @:noCompletion public var t(default, never):String = ':widget';
   @:noCompletion public var k(default, never):String;
   @:noCompletion public var a(default, never):Dict<Any>;
   @:noCompletion public var c(default, never):Children;

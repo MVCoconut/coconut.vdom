@@ -36,7 +36,7 @@ class Renderable extends Widget {
   
   @:noCompletion function __apply(next) {
     beforePatching(this.__dom);
-    this.__dom = cast @:privateAccess VDom.updateNode(__dom, next, __lastRender);
+    this.__dom = cast @:privateAccess VDom.updateNode(__dom, next);
     __lastRender = next;
     afterPatching(this.__dom);
   }

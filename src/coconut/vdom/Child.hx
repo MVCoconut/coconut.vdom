@@ -1,14 +1,22 @@
 package coconut.vdom;
 
 abstract Child(VNode) from VNode from Widget {
- 
+  
+  static public inline var WIDGET = ':widget';
+  static public inline var TEXT = ':text';
+  static public inline var NATIVE = ':native';
+
   public var isText(get, never):Bool;
     inline function get_isText()
-      return this.t == null;
+      return this.t == TEXT;
 
   public var isWidget(get, never):Bool;
     inline function get_isWidget():Bool
-      return this.t == 'widget';
+      return this.t == WIDGET;
+
+  public var isNative(get, never):Bool;
+    inline function get_isNative():Bool
+      return this.t == NATIVE;
 
   public var key(get, never):String;
     inline function get_key()
@@ -27,16 +35,22 @@ abstract Child(VNode) from VNode from Widget {
       return this.c;
 
   @:from static inline function ofString(s:String):Child
-    return ({ t: null, k: s, a: @:privateAccess VDom.EMPTY } : VNode);
+    return ({ t: ':text', k: s, a: @:privateAccess VDom.EMPTY } : VNode);
 
   @:from static inline function ofInt(i:Int):Child
     return ofString(Std.string(i));
 
   @:from static inline function ofElement(e:js.html.Node):Child
-    return ({ t: ':native', a: { ':native': e } } : VNode);
+    return ({ t: ':native', a: { NATIVE: e } } : VNode);
 
-  public inline function getNative():js.html.Node
-    return if (type == ':native') attributes[':native'] else null;
+  public inline function asText():Null<String>
+    return if (isText) key else null;
+
+  public inline function asNative():Null<js.html.Node>
+    return if (isNative) attributes[NATIVE] else null;
+
+  public inline function asWidget():Null<Widget>
+    return if (isWidget) cast this else null;
 
   @:to public inline function toDom():js.html.Node
     return @:privateAccess VDom.createNode(this);

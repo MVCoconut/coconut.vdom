@@ -4,7 +4,6 @@
 	"dependencies": {
 		"tink_csss": "",
 		"tink_hxx": "",
-		"js-virtual-dom": "",
 		"coconut.ui": "",
 		"tink_state": ""
 	},
