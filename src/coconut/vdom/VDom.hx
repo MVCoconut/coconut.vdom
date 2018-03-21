@@ -15,13 +15,7 @@ class VDom {
       c: children 
     });
 
-  static function updateNode(domNode:DomNode, newNode:Child) {
-    var ret = doUpdateNode(domNode, newNode);
-    ret.vdom = newNode;
-    return ret;
-  }
-  static function doUpdateNode(domNode:DomNode, newNode:Child) {
-    var oldNode = domNode.vdom;
+  static function updateNode(domNode:Node, newNode:Child, oldNode:Child) {
 		if (newNode == oldNode) return domNode;
     var ret = domNode;
     
@@ -49,12 +43,16 @@ class VDom {
         else if (newNode.asNative() != null)//oldNode is native too
           replace(newNode.asNative())
         else {
-          updateElement(cast domNode, newNode.attributes, domNode.vdom.attributes);
+          var elt:Element = cast domNode;
+          updateElement(elt, newNode.attributes, oldNode.attributes);
 
-          var newChildren = newNode.children;
+          var newChildren = newNode.children,
+              oldChildren = oldNode.children.toArray(),
+              newDomChildren = [],
+              oldDomChildren:Array<Node> = untyped Array.prototype.slice.call(domNode.childNodes);
 
 				  var newLength = newChildren.length,
-              oldLength = domNode.childNodes.length;
+              oldLength = oldChildren.length;
 
           var oldKeyed = {
             var ret = new haxe.DynamicAccess();
@@ -65,40 +63,51 @@ class VDom {
                 newKeys[c.key] = true;
 
             for (i in 0...oldLength) {
-              var old = domNode.childNodes[i];
+              var old = oldChildren[i];
               var k = old.key;
-              if (k != null && newKeys[k]) 
-                ret[k] = old;
+              if (k != null && newKeys[k] && !ret.exists(k)) 
+                ret[k] = i;
             }
             ret;
           }
 
-          for (i in 0...newLength) {
+          var oldIndex = 0;
+          var newDomChildren = [
+            for (i in 0...newLength) {
+              var newChild = newChildren[i];
+              var oldChildIndex = 
+                switch oldKeyed[newChild.key] {
+                  case null: 
 
-            var newChild = newChildren[i];
+                    while (oldIndex < oldLength && oldKeyed.exists(oldChildren[oldIndex].key))
+                      oldIndex++; 
 
-            var target = 
-              switch oldKeyed[newChild.key] {
-                case null: 
-                  var j = i,
-                      max = domNode.childNodes.length;
+                    if (oldIndex < oldLength)
+                      oldIndex++;
+                    else
+                      oldIndex;
+                  case v: 
+                    oldKeyed.remove(newChild.key);
+                    v;
+                }
 
-                  while (j < max && oldKeyed.exists(domNode.childNodes[j].key)) j++;
-
-                  domNode.childNodes[j];
-                case v: v;
+              switch oldDomChildren[oldChildIndex] {
+                case null:
+                  createNode(newChild);
+                case target:
+                  updateNode(target, newChild, oldChildren[oldChildIndex]);
               }
 
-            if (target == null) 
-              domNode.appendChild(createNode(newChild));
-            else {
-              updateNode(target, newChild);
-              var cur = domNode.childNodes[i];
-              if (target != cur) 
-                domNode.insertBefore(target, cur);
             }
+          ];
+          
+          for (i in 0...newDomChildren.length) {
+            var newDom = newDomChildren[i];
+            if (newDom != domNode.childNodes[i])
+              domNode.insertBefore(newDom, domNode.childNodes[i]);
           }
-          for (i in newLength...oldLength)
+
+          for (i in newLength...domNode.childNodes.length)
             domNode.removeChild(domNode.childNodes[newLength]);    
         }
       case [false, true]:
@@ -146,19 +155,12 @@ class VDom {
       updateProp(element, key, newProps[key], oldProps[key]);		
 	}    
 
-	static function createNode(c:Child):Node {
-    var ret:DomNode = doCreateNode(c);
-    ret.vdom = c;
-    return ret;
-  }
-	static function doCreateNode(c:Child):Node 
-		return 
+	static function createNode(c:Child):Node 
+    return 
       if (c.isWidget) c.asWidget().init();
       else if (c.isText) document.createTextNode(c.asText());
       else switch c.asNative() {
         case null:
-          
-          console.log('create ${c.type} ${haxe.Json.stringify(c.attributes)}');
           
           var ret = document.createElement(c.type),
               attributes = c.attributes;
@@ -171,30 +173,4 @@ class VDom {
           ret;
         case v: v;
       }
-}
-
-@:forward(insertBefore, parentNode, appendChild, removeChild)
-private abstract DomNode(Node) from Node to Node {
-
-  public var childNodes(get, never):ChildList;
-    
-    inline function get_childNodes():ChildList
-      return cast this.childNodes;
-
-  public var key(get, never):String;
-
-    inline function get_key():String
-      return vdom.key;
-
-  public var vdom(get, set):Child;
-    
-    inline function get_vdom():Child
-      return untyped this.__vdom;
-
-    inline function set_vdom(param:Child):Child
-      return untyped this.__vdom = param;
-}
-
-extern class ChildList implements ArrayAccess<DomNode> {
-  var length(default, null):Int;
 }
