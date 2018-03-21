@@ -28,7 +28,7 @@ class VDom {
 		switch [newNode.isWidget, oldNode.isWidget] {
       case [true, true]:
 
-        replace(newNode.asWidget().update(oldNode.asWidget(), domNode));
+        replace(newNode.asWidget().__replaceWidget(oldNode.asWidget(), domNode));
 
       case [false, false]:
         if (newNode.type != oldNode.type) 
@@ -49,7 +49,7 @@ class VDom {
           var newChildren = newNode.children,
               oldChildren = oldNode.children.toArray(),
               newDomChildren = [],
-              oldDomChildren:Array<Node> = untyped Array.prototype.slice.call(domNode.childNodes);
+              oldDomChildren = domNode.childNodes;
 
 				  var newLength = newChildren.length,
               oldLength = oldChildren.length;
@@ -79,8 +79,13 @@ class VDom {
                 switch oldKeyed[newChild.key] {
                   case null: 
 
-                    while (oldIndex < oldLength && oldKeyed.exists(oldChildren[oldIndex].key))
-                      oldIndex++; 
+                    while (oldIndex < oldLength) {
+                      var oldChild = oldChildren[oldIndex];
+                      if (oldChild == null || oldKeyed.exists(oldChild.key))
+                        oldIndex++; 
+                      else break;
+                    }
+                      
 
                     if (oldIndex < oldLength)
                       oldIndex++;
@@ -95,7 +100,9 @@ class VDom {
                 case null:
                   createNode(newChild);
                 case target:
-                  updateNode(target, newChild, oldChildren[oldChildIndex]);
+                  var oldChild = oldChildren[oldChildIndex];
+                  oldChildren[oldChildIndex] = null;
+                  updateNode(target, newChild, oldChild);
               }
 
             }
@@ -108,13 +115,17 @@ class VDom {
           }
 
           for (i in newLength...domNode.childNodes.length)
-            domNode.removeChild(domNode.childNodes[newLength]);    
+            domNode.removeChild(domNode.childNodes[newLength]);   
+
+          for (o in oldChildren)
+            if (o != null && o.isWidget)
+              o.asWidget().__destroyWidget();
         }
       case [false, true]:
-        oldNode.asWidget().destroy();
+        oldNode.asWidget().__destroyWidget();
         replace(createNode(newNode));
       case [true, false]:
-        replace(newNode.asWidget().init());
+        replace(newNode.asWidget().__initWidget());
     }
     return ret;
 	}
@@ -157,7 +168,7 @@ class VDom {
 
 	static function createNode(c:Child):Node 
     return 
-      if (c.isWidget) c.asWidget().init();
+      if (c.isWidget) c.asWidget().__initWidget();
       else if (c.isText) document.createTextNode(c.asText());
       else switch c.asNative() {
         case null:

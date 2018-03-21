@@ -19,7 +19,7 @@ class Renderable extends Widget {
     super('coconut-widget:' + (keygen++));
   }
         
-  @:noCompletion override public function init() {
+  @:noCompletion override public function __initWidget() {
     __lastRender = __rendered.value;
     this.beforeInit();
     this.__dom = @:privateAccess cast VDom.createNode(__lastRender);
@@ -43,7 +43,7 @@ class Renderable extends Widget {
     
   public function toElement()
     return switch __dom {
-      case null: init();
+      case null: __initWidget();
       case v: v;
     } 
 
@@ -57,19 +57,20 @@ class Renderable extends Widget {
   macro function get(_, e);
   macro function hxx(e);
 
-  @:noCompletion override public function destroy():Void {
+  @:noCompletion override public function __destroyWidget():Void {
     beforeDestroy(this.__dom);
     this.__binding.dissolve();
-    super.destroy();
+    super.__destroyWidget();
     
     function _destroy(v:Child) 
       for (c in v.children) {
-        if (c.isWidget) (cast c:Widget).destroy();
+        if (c.isWidget) (cast c:Widget).__destroyWidget();
         else _destroy(c);
       }
 
     _destroy(__lastRender);
     afterDestroy(this.__dom);
+    this.__dom = null;
   }  
 }
 #else

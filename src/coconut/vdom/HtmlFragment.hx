@@ -15,7 +15,7 @@ class HtmlFragment extends Widget {
     this.className = className;
   }
 
-  override public function init() {
+  override public function __initWidget() {
     if (this.element == null) {
       this.element = document.createElement(tag);
       this.element.innerHTML = this.content;
@@ -24,9 +24,9 @@ class HtmlFragment extends Widget {
     return this.element;
   }
     
-  override function update(old:Widget, e:js.html.Node) 
+  override function __replaceWidget(old:Widget, e:js.html.Node) 
     return switch Std.instance(old, HtmlFragment) {
-      case null: this.init();
+      case null: this.__initWidget();
       case v if (v.tag == this.tag): 
         
         this.element = cast e;
@@ -38,7 +38,7 @@ class HtmlFragment extends Widget {
           this.element.innerHTML = this.content;
 
         e;
-      default: this.init();
+      default: this.__initWidget();
     }
     
   static public function create(attr:RawAttr)

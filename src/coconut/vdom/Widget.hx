@@ -13,12 +13,12 @@ class Widget {
     untyped this.k = key;
   }
 
-  public function init():Node
+  @:noCompletion public function __initWidget():Node
     return throw new js.Error('$t does not overwrite init method');
 
-  public function update(w:Widget, e:Node):Node
-    return init();
+  @:noCompletion public function __replaceWidget(w:Widget, e:Node):Node
+    return __initWidget();
 
-  public function destroy():Void {}
+  @:noCompletion public function __destroyWidget():Void {}
 
 }
