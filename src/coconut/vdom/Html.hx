@@ -62,6 +62,7 @@ class Html {
   static public inline function source(attr: SourceAttr):Child return h('source', attr);
   static public inline function input(attr: InputAttr):Child return h('input', attr);
   static public inline function form(attr: FormAttr, ?children:Children):Child return h('form', attr, children);
+  static public inline function fieldset(attr:{>EditableAttr, @:optional var disabled(default, never):Bool; @:optional var name(default, never):String; }, ?children:Children) return h('fieldset', attr, children);
 
   static public inline function select(attr: SelectAttr, ?children:Children):Child return h('select', attr, children);
   static public inline function option(attr: OptionAttr, ?children:Children):Child return h('option', attr, children);
