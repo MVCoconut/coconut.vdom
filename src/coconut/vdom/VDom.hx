@@ -16,7 +16,7 @@ class VDom {
     });
 
   static function updateNode(domNode:Node, newNode:Child, oldNode:Child) {
-		if (newNode == oldNode) return domNode;
+    if (newNode == oldNode) return domNode;
     var ret = domNode;
     
     function replace(with) {
@@ -25,7 +25,7 @@ class VDom {
         domNode.parentNode.replaceChild(ret, domNode);
     }
 
-		switch [newNode.isWidget, oldNode.isWidget] {
+    switch [newNode.isWidget, oldNode.isWidget] {
       case [true, true]:
 
         replace(newNode.asWidget().__replaceWidget(oldNode.asWidget(), domNode));
@@ -51,7 +51,7 @@ class VDom {
               newDomChildren = [],
               oldDomChildren = domNode.childNodes;
 
-				  var newLength = newChildren.length,
+          var newLength = newChildren.length,
               oldLength = oldChildren.length;
 
           var oldKeyed = {
@@ -128,14 +128,14 @@ class VDom {
         replace(newNode.asWidget().__initWidget());
     }
     return ret;
-	}
+  }
 
   static function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     if (oldVal != newVal) 
       untyped target[name] = newVal;
 
-	static function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-		switch name {
+  static function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
+    switch name {
       case 'key':
       case 'style':
         updateObject(element.style, newVal, oldVal, setField);
@@ -147,32 +147,32 @@ class VDom {
         else      
           Reflect.setField(element, name, newVal);
     }
-		
-	static function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
+    
+  static function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
     if (newVal == null) element.removeAttribute(name);
     else element.setAttribute(name, newVal);
 
-	static function updateProp(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
+  static function updateProp(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
     if (oldVal != newVal) 
       setProp(element, name, newVal, oldVal);
-	
-	static function updateElement(element:Element, newProps:Dict<Any>, oldProps:Dict<Any>) 
+  
+  static function updateElement(element:Element, newProps:Dict<Any>, oldProps:Dict<Any>) 
     updateObject(element, newProps, oldProps, updateProp);
 
-	static inline function updateObject<Target>(element:Target, newProps:Dict<Any>, oldProps:Dict<Any>, updateProp:Target->String->Any->Any->Void) {
-		var keys:Dynamic<Bool> = {};
+  static inline function updateObject<Target>(element:Target, newProps:Dict<Any>, oldProps:Dict<Any>, updateProp:Target->String->Any->Any->Void) {
+    var keys:Dynamic<Bool> = {};
     
     if (newProps == null) newProps = EMPTY;
     if (oldProps == null) oldProps = EMPTY;
 
-		for(key in newProps.keys()) Reflect.setField(keys, key, true);
-		for(key in oldProps.keys()) Reflect.setField(keys, key, true);
-		
+    for(key in newProps.keys()) Reflect.setField(keys, key, true);
+    for(key in oldProps.keys()) Reflect.setField(keys, key, true);
+    
     for(key in Dict.getKeys(keys)) 
-      updateProp(element, key, newProps[key], oldProps[key]);		
-	}    
+      updateProp(element, key, newProps[key], oldProps[key]);    
+  }    
 
-	static function createNode(c:Child):Node 
+  static function createNode(c:Child):Node 
     return 
       if (c.isWidget) c.asWidget().__initWidget();
       else if (c.isText) document.createTextNode(c.asText());
