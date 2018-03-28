@@ -1,5 +1,6 @@
 package coconut.vdom;
 
+@:observable
 abstract Child(VNode) from VNode from Widget {
   
   static public inline var WIDGET = ':widget';
