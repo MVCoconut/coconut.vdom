@@ -1,1 +1,2 @@
 --macro coconut.vdom.macros.Setup.all()
+-D coconut_vdom
