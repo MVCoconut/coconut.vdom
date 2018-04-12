@@ -42,7 +42,7 @@ abstract Child(VNode) from VNode from Widget {
     return ofString(Std.string(i));
 
   @:from static inline function ofElement(e:js.html.Node):Child
-    return ({ t: ':native', a: { NATIVE: e } } : VNode);
+    return ({ t: ':native', a: { ':native': e } } : VNode);
 
   public inline function asText():Null<String>
     return if (isText) key else null;
@@ -55,6 +55,12 @@ abstract Child(VNode) from VNode from Widget {
 
   @:to public inline function toDom():js.html.Node
     return @:privateAccess VDom.createNode(this);
+
+  #if compat
+  //TODO: deprecate
+  @:to public function toElement():js.html.Node
+    return @:privateAccess VDom.createNode(this);    
+  #end
 }
 
 typedef VNode = {
