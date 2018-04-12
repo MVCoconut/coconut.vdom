@@ -15,7 +15,7 @@ class Setup {
       return switch getType('coconut.vdom.Html') {
         case TInst(_.get().statics.get() => statics, _):
           [for (f in statics) if (f.isPublic) switch f.kind {
-            case FMethod(MethInline): 
+            case FMethod(_): 
               new Named(
                 f.name, 
                 tink.hxx.Generator.tagDeclaration('coconut.vdom.Html.${f.name}', f.pos, f.type)
