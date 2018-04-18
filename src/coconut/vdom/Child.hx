@@ -58,8 +58,8 @@ abstract Child(VNode) from VNode from Widget {
 
   #if compat
   //TODO: deprecate
-  @:to public function toElement():js.html.Node
-    return @:privateAccess VDom.createNode(this);    
+  @:to public inline function toElement():js.html.Element
+    return cast toDom();
   #end
 }
 
