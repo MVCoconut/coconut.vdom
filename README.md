@@ -24,7 +24,7 @@ class Button extends coconut.ui.View<{ onclick:Void->Void, disabled:Bool, label:
 }
 ```
 
-Disregarding the fact that this is would make for a hot contender in a competition for finding the stupidest way to render buttons, it's important to understand that if you create an enabled button and then disable it, the `span` is replaced by a `button` in the actual dom. Performance wise this *may* have quite far reaching implications. It is therefore suggested to **always wrap your views**, e.g.:
+Disregarding the fact that this would make for a hot contender in a competition for finding the stupidest way to render buttons, it's important to understand that if you create an enabled button and then disable it, the `span` is replaced by a `button` in the actual dom. Performance wise this *may* have quite far reaching implications. It is therefore suggested to **always wrap your views**, e.g.:
 
 ```haxe
 class Button extends coconut.ui.View<{ onclick:Void->Void, disabled:Bool, label:String }> {
@@ -40,11 +40,17 @@ class Button extends coconut.ui.View<{ onclick:Void->Void, disabled:Bool, label:
 }
 ```
 
-That said, you should *never* rely on a views element staying the same, certainly not from outside the view, but also not from the inside.
+That said, you should *never* rely on a view's element staying the same, certainly not from outside the view, but also not from the inside.
 
 ## View Life Cycle
 
 Every view has the following life cycle hooks that you may override:
+
+```haxe
+function mounted(target:Node):Void;
+```
+
+This function is called once the view is mounted, with target being the underlying DOM node.
 
 ```haxe
 function beforeInit():Void;

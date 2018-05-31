@@ -181,9 +181,22 @@ class VDom {
       updateProp(element, key, newProps[key], oldProps[key]);    
   }    
 
+  static var afterMount:Array<Void->Void> = [];
+  static function mount(c:Child, parent:Node) {
+    
+    parent.appendChild(createNode(c));
+
+    for (f in afterMount.splice(0, afterMount.length)) f();
+  }
+
   static function createNode(c:Child):Node 
     return 
-      if (c.isWidget) c.asWidget().__initWidget();
+      if (c.isWidget) {
+        var w = c.asWidget();
+        var n = w.__initWidget();
+        afterMount.push(@:privateAccess w.afterMounting.bind(n));
+        n;
+      }
       else if (c.isText) document.createTextNode(c.asText());
       else switch c.asNative() {
         case null:

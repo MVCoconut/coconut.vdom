@@ -20,5 +20,6 @@ class Widget {
     return __initWidget();
 
   @:noCompletion public function __destroyWidget():Void {}
+  @:noCompletion private function afterMounting(n:Node):Void {}
 
 }

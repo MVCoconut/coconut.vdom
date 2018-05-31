@@ -2,11 +2,22 @@ package coconut.vdom;
 
 #if !macro
 import js.html.Element;
+import js.html.Node;
+import js.Browser.*;
 import tink.CoreApi;
 import tink.state.Observable;
 
 class Renderable extends Widget {
-  
+  static var dummy(get, null):Element;
+    static function get_dummy() {
+      if (dummy == null) {
+        dummy = document.createDivElement();
+        dummy.style.display = 'none !important';
+        document.head.appendChild(dummy);
+      }
+      return dummy;
+    }
+
   @:noCompletion var __rendered:Observable<coconut.ui.RenderResult>;
   @:noCompletion var __dom:Element;
   @:noCompletion var __binding:CallbackLink;
@@ -21,12 +32,16 @@ class Renderable extends Widget {
         
   @:noCompletion override public function __initWidget() {
     __lastRender = __rendered.value;
-    this.beforeInit();
     this.__dom = @:privateAccess cast VDom.createNode(__lastRender);
-    this.afterInit(__dom);
     __setupBinding();
     
     return this.__dom;
+  }
+
+  public function mount(into:Element) {
+    if (this.__dom != null) throw 'assert';//TODO: should probably just move it around in the DOM
+
+    @:privateAccess VDom.mount(this, into);
   }
   
   @:noCompletion function __setupBinding()
@@ -41,14 +56,13 @@ class Renderable extends Widget {
     afterPatching(this.__dom);
   }
     
+  @:deprecated('use mount instead')
   public function toElement()
     return switch __dom {
       case null: __initWidget();
       case v: v;
     } 
 
-  @:noCompletion function beforeInit() {}
-  @:noCompletion function afterInit(element:Element) {}
   @:noCompletion function beforePatching(element:Element) {}
   @:noCompletion function afterPatching(element:Element) {}
   @:noCompletion function beforeDestroy(element:Element) {}
@@ -64,7 +78,7 @@ class Renderable extends Widget {
     
     function _destroy(v:Child) 
       for (c in v.children) {
-        if (c.isWidget) (cast c:Widget).__destroyWidget();
+        if (c.isWidget) c.asWidget().__destroyWidget();
         else _destroy(c);
       }
 
