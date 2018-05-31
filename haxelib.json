@@ -1,24 +1,24 @@
 {
 	"name": "coconut.vdom",
-	"classPath": "src",
-	"dependencies": {
-		"tink_csss": "",
-		"tink_hxx": "",
-		"js-virtual-dom": "",
-		"coconut.ui": "",
-		"tink_state": ""
-	},
-	"url": "https://github.com/MVCoconut/coconut.vdom/",
-	"contributors": [
-		"back2dos"
-	],
-	"version": "0.5.0",
-	"releasenote": "Update for coconut.ui 0.7",
+	"license": "MIT",
 	"tags": [
 		"ui",
 		"js",
 		"coconut",
 		"reactive"
 	],
-	"license": "MIT"
+	"classPath": "src",
+	"contributors": [
+		"back2dos"
+	],
+	"releasenote": "Adjust to latest tink_hxx.",
+	"version": "0.6.0",
+	"url": "https://github.com/MVCoconut/coconut.vdom/",
+	"dependencies": {
+		"tink_hxx": "",
+		"tink_state": "",
+		"coconut.ui": "",
+		"tink_csss": "",
+		"js-virtual-dom": ""
+	}
 }
