@@ -51,7 +51,7 @@ abstract EventFrom<E:Event, T:Element>(E) from E to E {
       return cast this.target;
   
   public var dom(get, never):T;
-    inline function get_elem()
+    inline function get_dom()
       return currentTarget;
 
 }
