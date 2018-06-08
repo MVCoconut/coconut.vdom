@@ -134,19 +134,11 @@ class VDom {
     if (oldVal != newVal) 
       untyped target[name] = newVal;
 
-  static function setStyle(target:js.html.CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    if (oldVal != newVal) 
-      if (newVal == null)
-        target.removeProperty(name);
-      else
-        target.setProperty(name, newVal);
-
-
   static function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
       case 'key':
       case 'style':
-        updateObject(element.style, newVal, oldVal, setStyle);
+        updateObject(element.style, newVal, oldVal, setField);
       case 'attributes':
         updateObject(element, newVal, oldVal, updateAttribute);
       default:
