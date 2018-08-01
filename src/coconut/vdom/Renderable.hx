@@ -96,6 +96,7 @@ class Renderable extends Widget {
     }
     _destroy(__lastRender);
     afterDestroy(this.__dom);
+    this.__dom = null;
   }  
 }
 #else
