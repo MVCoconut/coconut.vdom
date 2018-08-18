@@ -12,7 +12,7 @@ class RunTests {
     
     travix.Logger.exit(
       try {
-        document.body.appendChild(new Example({ foo: 4 }).toElement());
+        document.body.appendChild(new Example(tink.state.Observable.const({ foo: 4 })).toElement());
         if (document.querySelector('body>div>h1').innerHTML != '4')
           throw 'test failed';
         travix.Logger.println('... works');
@@ -36,7 +36,7 @@ class Example extends Renderable {
     ')));
   }
 
-  override function afterInit(_) {
+  override function afterMounting(_) {
     if (false) {
       trace(get('a').href);
       trace(get('button').disabled);
