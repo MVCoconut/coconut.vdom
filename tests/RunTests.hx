@@ -1,5 +1,6 @@
 package ;
 
+import coconut.vdom.Widget;
 import js.html.Element;
 import js.Browser.*;
 import coconut.Ui;
@@ -12,9 +13,9 @@ class RunTests {
     
     travix.Logger.exit(
       try {
-        document.body.appendChild(new Example(tink.state.Observable.const({ foo: 4 })).toElement());
-        if (document.querySelector('body>div>h1').innerHTML != '4')
-          throw 'test failed';
+        // document.body.appendChild(new Example(tink.state.Observable.const({ foo: 4 })).toElement());
+        // if (document.querySelector('body>div>h1').innerHTML != '4')
+        //   throw 'test failed';
         travix.Logger.println('... works');
         0;
       }
@@ -27,19 +28,28 @@ class RunTests {
   
 }
 
-class Example extends Renderable {
-  public function new(o:tink.state.Observable<{ foo:Int}>) {
-    super(o.map(function (state):RenderResult return hxx('
-      <div>
-        <h1>{state.foo}</h1>
-      </div>
-    ')));
-  }
-
-  override function afterMounting(_) {
-    if (false) {
-      trace(get('a').href);
-      trace(get('button').disabled);
-    }
-  }
+class Foo extends View {
+  @:attribute var foo:Int;
+  function render() '<div />';
 }
+
+// class Bar extends View {
+//   function render() '<Foo foo={42} />';
+// }
+
+// class Example extends Widget {
+//   public function new(o:tink.state.Observable<{ foo:Int}>) {
+//     super(o.map(function (state):RenderResult return hxx('
+//       <div>
+//         <h1>{state.foo}</h1>
+//       </div>
+//     ')));
+//   }
+
+  // override function afterMounting() {
+  //   if (false) {
+  //     trace(get('a').href);
+  //     trace(get('button').disabled);
+  //   }
+  // }
+// }

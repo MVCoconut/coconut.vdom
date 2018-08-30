@@ -1,3 +1,3 @@
 package coconut.ui;
 
-typedef Renderer = coconut.vdom.Renderable;
+typedef Renderer = coconut.vdom.Widget;

@@ -1,10 +1,10 @@
 package coconut.vdom;
 
 import js.html.*;
-import coconut.vdom.VDom.h;
 import coconut.vdom.Attr;
 
 class Html {
+  static inline function h(tag:String, attr:Dynamic, ?children:Children):Child return new Child.VElement(tag, attr, children);
   static public inline function iframe(attr: IframeAttr, ?children:Children):Child return h('iframe', attr, children);
   static public inline function object(attr: {> Attr, type:String, data:String }, ?children:Children):Child return h('object', attr, children);
 
@@ -68,5 +68,5 @@ class Html {
   static public inline function option(attr: OptionAttr, ?children:Children):Child return h('option', attr, children);
   static public inline function script(attr: ScriptAttr, ?children:Children):Child return h('script', attr, children);
   
-  static public inline function raw(attr: HtmlFragment.RawAttr):Child return HtmlFragment.create(attr);
+  // static public inline function raw(attr: HtmlFragment.RawAttr):Child return HtmlFragment.create(attr);
 }

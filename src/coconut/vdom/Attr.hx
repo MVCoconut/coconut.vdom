@@ -64,7 +64,7 @@ typedef AttrOf<Target:Element> = {
   @:optional var lang(default, never):String;
   @:optional var dir(default, never):String;
   
-  @:optional var attributes(default, never):Dict<Ext>;
+  @:optional var attributes(default, never):coconut.diffing.Dict<Ext>;
   
   @:optional var hidden(default, never):Bool;
   @:optional var tabIndex(default, never):Int;
