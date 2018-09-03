@@ -14,18 +14,18 @@ class Differ {
         oldNative = driver.all(target);
 
     var oldKeyed = {
-      var ret = new haxe.DynamicAccess();
-      var newKeys = new haxe.DynamicAccess();
+      var ret = new Key.KeyMap();
+      var newKeys = new Key.KeyMap();
 
       for (c in newChildren) 
         if (c.key != null) 
-          newKeys[c.key] = true;
+          newKeys.set(c.key, true);
 
       for (i in 0...oldLength) {
         var old = oldChildren[i];
         var k = old.key;
-        if (k != null && newKeys[k] && !ret.exists(k)) 
-          ret[k] = i;
+        if (k != null && newKeys.get(k) && !ret.has(k)) 
+          ret.set(k, i);
       }
       ret;
     }
@@ -35,12 +35,12 @@ class Differ {
       for (i in 0...newLength) {
         var newChild = newChildren[i];
         var oldChildIndex = 
-          switch oldKeyed[newChild.key] {
+          switch oldKeyed.get(newChild.key) {
             case null: 
 
               while (oldIndex < oldLength) {
                 var oldChild = oldChildren[oldIndex];
-                if (oldChild == null || oldKeyed.exists(oldChild.key))
+                if (oldChild == null || oldKeyed.has(oldChild.key))
                   oldIndex++; 
                 else break;
               }
@@ -50,7 +50,7 @@ class Differ {
               else
                 oldIndex;
             case v: 
-              oldKeyed.remove(newChild.key);
+              oldKeyed.delete(newChild.key);
               v;
           }
 

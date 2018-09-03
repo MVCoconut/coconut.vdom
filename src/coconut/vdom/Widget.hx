@@ -21,17 +21,11 @@ class Widget {
   @:noCompletion public function __initWidget() {
     __lastRender = __rendered.value;
     
-    __lastRender.create();
+    this.__dom = __lastRender.create();
     __setupBinding();
     
-    return this.__dom;
+    return __dom;
   }
-
-  // public function mount(into:Element) {
-  //   if (this.__dom != null) throw 'assert';//TODO: should probably just move it around in the DOM
-
-  //   @:privateAccess VDom.mount(this, into);
-  // }
   
   @:noCompletion function __setupBinding()
     this.__binding = this.__rendered.bind(function (next) {
@@ -43,18 +37,10 @@ class Widget {
     __lastRender = next;
     __afterPatching();
   }
-    
-  // @:deprecated('use mount instead')
-  // public function toElement()
-  //   return switch __dom {
-  //     case null: __initWidget();
-  //     case v: v;
-  //   } 
-
+  
   @:noCompletion function __afterPatching() {}
   @:noCompletion function __beforeDestroy() {}
 
-  // macro function get(_, e);
   macro function hxx(e);
 
   @:noCompletion public function __destroyWidget(target:Node):Void {
@@ -65,8 +51,6 @@ class Widget {
 #else
 class Widget {
  
-  macro function get(_, e) 
-    return coconut.vdom.macros.Select.typed(e);
   macro function hxx(_, e) 
     return 
       #if coconut_ui

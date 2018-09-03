@@ -2,10 +2,8 @@
 	"name": "coconut.vdom",
 	"classPath": "src",
 	"dependencies": {
-		"tink_csss": "",
-		"tink_hxx": "",
 		"coconut.ui": "",
-		"tink_state": ""
+		"xDOM": ""
 	},
 	"url": "https://github.com/MVCoconut/coconut.vdom/",
 	"contributors": [

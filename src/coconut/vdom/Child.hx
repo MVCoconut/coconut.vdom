@@ -15,14 +15,17 @@ typedef ChildNode = VNode<Node, NodeKind>;
 abstract Child(ChildNode) from ChildNode to ChildNode {
   
   @:from static inline function ofString(s:String):Child
-    return new VText(s);
+    return (new VText(s):ChildNode);
+
+  @:from static inline function ofInt(i:Int):Child
+    return ofString(Std.string(i));
 
 }
 
 class VText implements ChildNode {
 
   public var kind(default, never):NodeKind = Text;
-  public var key(default, never):Null<String> = null;//Perhaps the text could serve as key?
+  public var key(default, never):Null<Key> = null;//Perhaps the text could serve as key?
   
   var text:String;
 
@@ -61,7 +64,7 @@ class DomDriver implements Driver<Node> {
 
 class VElement implements ChildNode {
   public var kind(default, never):NodeKind = Element;
-  public var key(default, never):Null<String>;
+  public var key(default, null):Null<Key>;
 
   var tag:String;
   var attributes:Dict<Any>;
@@ -71,6 +74,7 @@ class VElement implements ChildNode {
     this.tag = tag;
     this.attributes = attributes;
     this.children = children;
+    this.key = attributes['key'];
   }
 
   public function create() {
@@ -130,7 +134,7 @@ class VElement implements ChildNode {
 
 class VWidget<W:Widget, Data> implements ChildNode {
   public var kind(default, never):NodeKind = Widget;
-  public var key(default, never):Null<String>;
+  public var key(default, null):Null<Key>;
 
   var data:Data;
   var cls:Class<W>;
@@ -139,7 +143,8 @@ class VWidget<W:Widget, Data> implements ChildNode {
 
   var instances:Map<Node, W> = new Map();//TODO: actually the instances should be saved into the DOM so something similar to `ReactDOM.findNode` is possible
 
-  public function new(data, cls, construct, update) {
+  public function new(key, data, cls, construct, update) {
+    this.key = key;
     this.data = data;
     this.cls = cls;
     this.construct = construct;
@@ -161,7 +166,7 @@ class VWidget<W:Widget, Data> implements ChildNode {
       case Widget:
         var old:VWidget<Dynamic, Dynamic> = cast old;
         if (old.cls == cls) {
-          update(data, old.instances[target]);
+          update(data, instances[target] = old.instances[target]);
           target;
         }
         else 
