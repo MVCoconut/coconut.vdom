@@ -18,7 +18,7 @@ class Setup {
       var tag = tags[name];
       ret.push({
         name: name,
-        pos: (macro null).pos,//TODO: add pos in tink_domspec
+        pos: tag.pos,
         access: [AStatic, APublic, AInline],
         kind: FFun({
           var et = tag.dom.toComplex();
