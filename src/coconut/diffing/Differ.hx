@@ -1,28 +1,36 @@
 package coconut.diffing;
 
+@:forward(map, filter, iterator, length)
+abstract ReadonlyArray<T>(Array<T>) from Array<T> {
+  @:arrayAccess inline function get(index:Int):T return this[index];
+}
+
 class Differ {
 
   static public function updateChildren<N, K>(
     driver:Driver<N>, 
     target:N, 
-    newChildren:Array<VNode<N, K>>, 
-    oldChildren:Array<VNode<N, K>>
+    newChildren:ReadonlyArray<VNode<N, K>>, 
+    oldChildren:ReadonlyArray<VNode<N, K>>
   ) {
 
     var newLength = newChildren.length,
         oldLength = oldChildren.length,
         oldNative = driver.all(target);
 
+    var used = new haxe.ds.Vector<Bool>(oldLength);
+
     var oldKeyed = {
       var ret = new Key.KeyMap();
       var newKeys = new Key.KeyMap();
 
-      for (c in newChildren) 
-        if (c.key != null) 
+      for (c in newChildren)
+        if (c != null && c.key != null) 
           newKeys.set(c.key, true);
 
       for (i in 0...oldLength) {
         var old = oldChildren[i];
+        if (old == null) continue;
         var k = old.key;
         if (k != null && newKeys.get(k) && !ret.has(k)) 
           ret.set(k, i);
@@ -34,15 +42,19 @@ class Differ {
     var newDomChildren = [
       for (i in 0...newLength) {
         var newChild = newChildren[i];
+        if (newChild == null) continue;
         var oldChildIndex = 
           switch oldKeyed.get(newChild.key) {
             case null: 
 
               while (oldIndex < oldLength) {
-                var oldChild = oldChildren[oldIndex];
-                if (oldChild == null || oldKeyed.has(oldChild.key))
-                  oldIndex++; 
-                else break;
+                if (used[oldIndex]) oldIndex++;
+                else {
+                  var oldChild = oldChildren[oldIndex];
+                  if (oldChild == null || oldKeyed.has(oldChild.key))
+                    oldIndex++; 
+                  else break;
+                }
               }
 
               if (oldIndex < oldLength)
@@ -59,7 +71,7 @@ class Differ {
             newChild.create();
           case target:
             var oldChild = oldChildren[oldChildIndex];
-            oldChildren[oldChildIndex] = null;
+            used[oldChildIndex] = true;
             if (oldChild == newChild)
               target;
             else {
