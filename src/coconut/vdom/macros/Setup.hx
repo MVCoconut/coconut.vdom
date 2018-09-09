@@ -27,7 +27,10 @@ class Setup {
             type: [
               tag.attr, 
               macro : tink.domspec.Events<$et>,
-              macro : { @:optional var attributes(default, never):coconut.diffing.Dict<xdom.html.Dataset.DatasetValue>; },
+              macro : { 
+                @:optional var attributes(default, never):coconut.diffing.Dict<xdom.html.Dataset.DatasetValue>; 
+                @:optional var key(default, never):coconut.diffing.Key;
+              },
             ].intersect().sure(),
             opt: false
           }];
@@ -45,7 +48,6 @@ class Setup {
             expr: macro return h($a{callArgs}),
             ret: macro : coconut.vdom.Child
           }
-          // expr: macro return h($v{name}, attr),
         })
       });
     }
