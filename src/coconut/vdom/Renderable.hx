@@ -23,8 +23,6 @@ class Renderable extends Widget {
   }
         
   @:noCompletion override public function init():Element {
-    if (this.__dom != null) return this.__dom;
-    
     __lastRender = __rendered.value;
     this.beforeInit();
     this.__dom = create(__lastRender);
@@ -46,9 +44,12 @@ class Renderable extends Widget {
     __lastRender = next;
     afterPatching(this.__dom);
   }
-  
-  public inline function toElement() 
-    return init();
+    
+  override public function toElement() 
+    return switch __dom {
+      case null: init();
+      case v: v;
+    } 
 
   @:noCompletion function beforeInit() {}
   @:noCompletion function afterInit(element:Element) {}
@@ -96,7 +97,6 @@ class Renderable extends Widget {
     }
     _destroy(__lastRender);
     afterDestroy(this.__dom);
-    this.__dom = null;
   }  
 }
 #else
