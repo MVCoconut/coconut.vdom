@@ -1,7 +1,7 @@
 package coconut.vdom.macros;
 
 #if macro
-import coconut.ui.macros.Generator;
+import coconut.ui.macros.*;
 import tink.domspec.Macro.tags;
 import haxe.macro.Context;
 import haxe.macro.Expr;
@@ -56,7 +56,7 @@ class Setup {
 
   static function all() {
 
-    coconut.ui.macros.HXX.generator = new Generator(
+    HXX.generator = new Generator(
       tink.hxx.Generator.extractTags(macro coconut.vdom.Html)
     );
 
