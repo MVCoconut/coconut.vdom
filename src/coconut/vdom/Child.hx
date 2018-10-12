@@ -2,120 +2,95 @@ package coconut.vdom;
 
 import coconut.diffing.*;
 import js.html.*;
+import js.Browser.*;
 
-@:enum abstract NodeKind(String) {
-  var Text = 'text';
-  var Element = 'element';
-  var Widget = 'widget';
+typedef VDom = {
+  var attributes:Dynamic<Any>;
+  var children:coconut.ui.Children;
 }
 
-typedef ChildNode = VNode<Node, NodeKind>;
-
-@:forward
-abstract Child(ChildNode) from ChildNode to ChildNode {
+abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> {
   
-  @:from static inline function ofString(s:String):Child
-    return (new VText(s):ChildNode);
+  inline function new(n) this = n;
 
-  @:from static inline function ofInt(i:Int):Child
-    return ofString(Std.string(i));
-
-}
-
-class VText implements ChildNode {
-
-  public var kind(default, never):NodeKind = Text;
-  public var key(default, never):Null<Key> = null;//Perhaps the text could serve as key?
+  static function element(tag, attr:Dynamic, ?children) 
+    return new Child({
+      type: tag,
+      key: attr.key,
+      ref: attr.ref,//TODO: it seems unfortunate that these are here
+      kind: VNative({
+        attributes: attr,
+        children: children
+      })
+    });
   
-  var text:String;
+  @:from static function ofText(s:String):Child
+    return element('', { text: s });
 
-  public function new(text)
-    this.text = text;
+  @:from static function ofInt(i:Int):Child
+    return Std.string(i);
 
-  public function create()
-    return js.Browser.document.createTextNode(text);
+  static function widget<A>(name, key, ref:Dynamic, attr:A, type:WidgetType<VDom, A, Node>)
+    return new Child({
+      type: name,
+      key: key,
+      ref: ref,
+      kind: VWidget(attr, type)
+    });
 
-  public function patch(target:Node, old:Child) 
-    return create();//TODO: if target is a text node, just replace the text (assuming a benchmark confirms it's worth it)
-
-  public function teardown(target:Node):Void {}
-}
-
-class DomDriver implements Driver<Node> {
-  static public var inst(default, never):DomDriver = new DomDriver();
-
-  function new() {}
-  public function total(target:Node):Int
-    return target.childNodes.length;
-
-  public function get(target:Node, index:Int):Node
-    return target.childNodes[index];
-
-  public function insertAt(target:Node, child:Node, index:Int):Void
-    target.insertBefore(child, target.childNodes[index]);
-
-  public function removeAt(target:Node, index:Int):Void
-    target.removeChild(target.childNodes[index]);
-
-  public function all(target:Node):Array<Node>
-    return untyped Array.prototype.slice.call(target.childNodes);
-
-}
-
-class VElement implements ChildNode {
-  public var kind(default, never):NodeKind = Element;
-  public var key(default, null):Null<Key>;
-
-  var tag:String;
-  var attributes:Dict<Any>;
-  var children:Children;
-
-  public function new(tag, attributes, ?children) {
-    this.tag = tag;
-    this.attributes = attributes;
-    this.children = children;
-    this.key = attributes['key'];
+  public function mountInto(target:Node) {
+    var root = new VRoot(target, [this], new DomDiffer());
   }
 
-  public function create() {
-    var ret = js.Browser.document.createElement(tag);
-    for (a in attributes.keys())
-      setProp(ret, a, attributes[a]);
-    for (c in children)
-      ret.appendChild(c.create());
-    return ret;
-  }
+}
 
-  public function patch(target:Node, old:Child) 
-    return 
-      switch old.kind {
-        case Element:
-          
-          var old:VElement = cast old;
-          
-          if (old.tag != tag) create();
-          else {
-            var e:Element = cast target;
-            Differ.updateObject(e, attributes, old.attributes, updateProp);
-            Differ.updateChildren(DomDriver.inst, e, children.toArray(), old.children.toArray());//TODO: avoid the copying
-            e;
-          }
+private class DomDiffer extends Differ<VDom, js.html.Node> {
 
-        default:
-          create();
+  public function new() {}
+
+  override function create(tag:String, vdom:VDom, root, parent):js.html.Node 
+    return switch tag {
+      case '': 
+        document.createTextNode(vdom.attributes.text);
+      case other: 
+        var elt = document.createElement(tag);
+        updateObject(elt, vdom.attributes, null, setProp);
+        switch vdom.children {
+          case null:
+          case c:
+            var rendered = renderAll(cast c, root, parent);
+            untyped elt._coco_rendered = rendered;
+            for (node in flatten(rendered.childList))
+              elt.appendChild(node);
+        }
+        elt;
+    }
+
+  override function nativeParent(node:Node)
+    return node.parentNode;
+
+  override function updateNative(node:Node, tag:String, nu:VDom, old:VDom, root, parent) 
+    if (tag == '') {
+      var text = nu.attributes.text;
+      if (text != old.attributes.text)
+        node.textContent = text;
+    }
+    else {
+      var elt:Element = cast node;
+      if (old.children.length + nu.children.length > 0) {
+        var o:{ _coco_rendered: Rendered<VDom, Node> } = cast node;
+        updateObject(elt, nu.attributes, old.attributes, setProp);
+        o._coco_rendered = updateAll(o._coco_rendered, cast nu.children, root, parent);
       }
+    }
 
-  public function teardown(target:Node):Void 
-    for (i in 0...children.length)
-      children[i].teardown(target.childNodes[i]);
-
-  static function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
+  inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      case 'key':
+      case 'key' | 'ref':
       case 'style':
-        Differ.updateObject(element.style, newVal, oldVal, Differ.setField);
+        updateObject(element.style, newVal, oldVal, setField);
       case 'attributes':
-        Differ.updateObject(element, newVal, oldVal, updateAttribute);
+        updateObject(element, newVal, oldVal, updateAttribute);
       default:
         if (newVal == null)
           untyped __js__('delete {0}[{1}]', element, name);
@@ -123,59 +98,48 @@ class VElement implements ChildNode {
           Reflect.setField(element, name, newVal);
     }
     
-  static function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
+  inline function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
     if (newVal == null) element.removeAttribute(name);
     else element.setAttribute(name, newVal);
-
-  static function updateProp(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
-    if (oldVal != newVal) 
-      setProp(element, name, newVal, oldVal);  
-}
-
-class VWidget<W:Widget, Data> implements ChildNode {
-  public var kind(default, never):NodeKind = Widget;
-  public var key(default, null):Null<Key>;
-
-  var data:Data;
-  var cls:Class<W>;
-  var construct:Data->W;
-  var update:Data->W->Void;
-
-  var instances:Map<Node, W> = new Map();//TODO: actually the instances should be saved into the DOM so something similar to `ReactDOM.findNode` is possible
-
-  public function new(key, data, cls, construct, update) {
-    this.key = key;
-    this.data = data;
-    this.cls = cls;
-    this.construct = construct;
-    this.update = update;
-  }
-
-  public function create() {
-    var widget = instantiate();
-    var dom = widget.__initWidget();
-    instances[dom] = widget;
-    return dom;
-  }
-
-  public function instantiate()
-    return construct(data);
-
-  public function patch(target:Node, old:Child) 
-    return switch old.kind {
-      case Widget:
-        var old:VWidget<Dynamic, Dynamic> = cast old;
-        if (old.cls == cls) {
-          update(data, instances[target] = old.instances[target]);
-          target;
-        }
-        else 
-          create();
-      default: create();  
+  
+  override function spliceChildren(target:js.html.Node, children:Array<js.html.Node>, start:js.html.Node, oldCount:Int) {
+    if (untyped target.className == 'todo-list') {
+      trace(target);
+      trace(children.length);
     }
+    var pos = 
+      if (start == null) 0;
+      else {
+        var found = -1;
+        for (i in 0...target.childNodes.length)
+          if (target.childNodes[i] == start) {
+            found = i;
+            break;
+          }
+        if (found == -1) throw 'start node not found';
+        0;
+      }
 
-  public function teardown(target:Node):Void {
-    instances[target].__destroyWidget(target);
-    instances.remove(target);
+    var created = 0;
+
+    function add(nu:js.html.Node) {
+      var old = target.childNodes[pos];
+      if (old != nu) {
+        if (nu.parentNode == null) created++;
+        target.insertBefore(nu, old);
+      }
+      pos++;
+    }
+    
+    for (c in children)
+      add(c);
+
+    // trace(oldCount + created - children.length);
+
+    for (i in 0...oldCount + created - children.length)
+      target.removeChild(target.childNodes[pos]);
   }
+
+  override function setChildren(target:js.html.Node, children:Array<js.html.Node>) 
+    spliceChildren(target, children, target.childNodes[0], target.childNodes.length);
 }
