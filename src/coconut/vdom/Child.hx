@@ -51,6 +51,9 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
 
   public function new() {}
 
+  override function unsetLastRender(target:Node)
+    untyped target._coco_ = null;
+
   override function getLastRender(target:Node):Null<Rendered<VDom, Node>> 
     return untyped target._coco_;
 
