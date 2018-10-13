@@ -2,7 +2,7 @@
 	"name": "coconut.vdom",
 	"classPath": "src",
 	"dependencies": {
-		"coconut.ui": "",
+		"coconut.diffing": "",
 		"xDOM": ""
 	},
 	"url": "https://github.com/MVCoconut/coconut.vdom/",
