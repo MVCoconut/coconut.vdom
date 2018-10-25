@@ -1,6 +1,5 @@
 package ;
 
-import coconut.vdom.Widget;
 import js.html.Element;
 import js.Browser.*;
 import coconut.Ui;

@@ -75,7 +75,7 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
     }
   }
 
-  override function updateNative(real:Node, nu:VDom, old:VDom, parent:Null<Parent<VDom, Node>>, later:Later) 
+  override function updateNative(real:Node, nu:VDom, old:VDom, parent:Null<Widget<VDom, Node>>, later:Later) 
     if (real.nodeType == Node.TEXT_NODE) {
       var text = nu.attributes.text;
       if (text != old.attributes.text) real.nodeValue = text;
@@ -86,7 +86,7 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
       _render(cast nu.children, elt, parent, later);
     }
 
-  override function createNative(tag:NodeType, vdom:VDom, parent:Null<Parent<VDom, Node>>, later:Later):Node 
+  override function createNative(tag:NodeType, vdom:VDom, parent:Null<Widget<VDom, Node>>, later:Later):Node 
     return switch tag {
       case '': 
         document.createTextNode(vdom.attributes.text);
@@ -96,6 +96,20 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
         _render(cast vdom.children, elt, parent, later);
         elt;
     }
+
+  override function replaceWidgetContent(prev:Map<Node, Bool>, cursor:Node, total:Int, next:Rendered<VDom, Node>, later:Later) {
+    
+    var parent = cursor.parentNode;
+    
+    next.each(later, function (r) {
+      prev.remove(r);
+      if (r == cursor) cursor = r.nextSibling;
+      else parent.insertBefore(r, cursor);
+    });
+
+    for (r in prev.keys())
+      parent.removeChild(r);
+  }
 
   override function destroyNative(n:Node) {
     switch getLastRender(n) {
