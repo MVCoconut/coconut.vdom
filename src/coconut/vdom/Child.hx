@@ -51,8 +51,11 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
 
   public function new() {}
 
-  override function unsetLastRender(target:Node)
-    untyped target._coco_ = null;
+  override function unsetLastRender(target:Node):Rendered<VDom, Node> {
+    var ret = untyped target._coco_ = null;
+    untyped __js__('delete {0}._coco_', target);
+    return ret;
+  }
 
   override function getLastRender(target:Node):Null<Rendered<VDom, Node>> 
     return untyped target._coco_;
@@ -109,19 +112,6 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
 
     for (r in prev.keys())
       parent.removeChild(r);
-  }
-
-  override function destroyNative(n:Node) {
-    switch getLastRender(n) {
-      case null:
-      case r:
-        for (c in r.childList)
-          destroyRender(c);
-    }
-    switch n.parentNode {
-      case null:
-      case p: p.removeChild(n);
-    }
   }
 
   override function removeChild(real:Node, child:Node) 

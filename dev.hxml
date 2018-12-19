@@ -1,4 +1,4 @@
 -lib coconut.vdom
--lib travix
-tests.hxml
--js test.js
+-cp tests
+-main Playground
+-js bin/js/tests.js

@@ -5,6 +5,7 @@ import coconut.ui.macros.*;
 import tink.domspec.Macro.tags;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import tink.hxx.*;
 
 using tink.MacroApi;
 
@@ -58,7 +59,7 @@ class Setup {
 
   static function all() 
     HXX.generator = new Generator(
-      tink.hxx.Generator.extractTags(macro coconut.vdom.Html)
+      Tag.extractAllFrom(macro coconut.vdom.Html)
     );
   
 }

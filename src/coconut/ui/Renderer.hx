@@ -1,3 +1,16 @@
 package coconut.ui;
 
-typedef Renderer = coconut.diffing.Widget<coconut.vdom.Child.VDom, js.html.Node>;
+import js.html.Node;
+import coconut.vdom.Child;
+
+class Renderer extends coconut.diffing.Widget<VDom, Node> {
+
+  static public function mount(target:Node, vdom:Child)
+    vdom.renderInto(target);
+
+  // static public function getNative(view:View):Null<Node>
+  //   return switch @:privateAccess view._coco_lastRender {
+  //     case null:
+  //     case r: r.each
+  //   }
+}
