@@ -43,6 +43,7 @@ abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
     differ.render([this], target);
 
   static var differ = new DomDiffer();
+  static public var PLACEHOLDER(default, never):Child = '';
 
 }
 
@@ -56,6 +57,9 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
     untyped __js__('delete {0}._coco_', target);
     return ret;
   }
+
+  override function placeholder(target):Child
+    return Child.PLACEHOLDER;
 
   override function getLastRender(target:Node):Null<Rendered<VDom, Node>> 
     return untyped target._coco_;
