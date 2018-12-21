@@ -10,7 +10,7 @@ typedef VDom = {
 }
 
 @:pure
-abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> {
+abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
   
   inline function new(n) this = n;
 
