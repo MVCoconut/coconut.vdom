@@ -53,7 +53,7 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
   public function new() {}
 
   override function unsetLastRender(target:Node):Rendered<VDom, Node> {
-    var ret = untyped target._coco_ = null;
+    var ret = untyped target._coco_;
     untyped __js__('delete {0}._coco_', target);
     return ret;
   }
@@ -131,9 +131,12 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
         updateObject(element.style, newVal, oldVal, setField);
       case 'attributes':
         updateObject(element, newVal, oldVal, updateAttribute);
+      case 'className' if (!newVal):
+        element.removeAttribute('class');
       default:
         if (newVal == null)
-          untyped __js__('delete {0}[{1}]', element, name);
+          if (element.hasAttribute(name)) element.removeAttribute(name);
+          else untyped __js__('delete {0}[{1}]', element, name);
         else      
           Reflect.setField(element, name, newVal);
     }
