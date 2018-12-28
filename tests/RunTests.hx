@@ -12,9 +12,6 @@ class RunTests {
     
     travix.Logger.exit(
       try {
-        // document.body.appendChild(new Example(tink.state.Observable.const({ foo: 4 })).toElement());
-        // if (document.querySelector('body>div>h1').innerHTML != '4')
-        //   throw 'test failed';
         travix.Logger.println('... works');
         0;
       }
@@ -32,23 +29,6 @@ class Foo extends View {
   function render() '<div />';
 }
 
-// class Bar extends View {
-//   function render() '<Foo foo={42} />';
-// }
-
-// class Example extends Widget {
-//   public function new(o:tink.state.Observable<{ foo:Int}>) {
-//     super(o.map(function (state):RenderResult return hxx('
-//       <div>
-//         <h1>{state.foo}</h1>
-//       </div>
-//     ')));
-//   }
-
-  // override function afterMounting() {
-  //   if (false) {
-  //     trace(get('a').href);
-  //     trace(get('button').disabled);
-  //   }
-  // }
-// }
+class Bar extends View {
+  function render() '<Foo foo={42} />';
+}
