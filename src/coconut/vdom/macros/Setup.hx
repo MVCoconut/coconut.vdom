@@ -32,7 +32,7 @@ class Setup {
                 @:hxxCustomAttributes(~/^(data-|aria-)/)
                 @:optional var attributes(default, never):Dynamic<xdom.html.Dataset.DatasetValue>; 
                 @:optional var key(default, never):coconut.diffing.Key;
-                @:optional var ref(default, never):$et->Void;
+                @:optional var ref(default, never):coconut.ui.Ref.RefSetter<$et>;
               },
             ].intersect().sure(),
             opt: false
