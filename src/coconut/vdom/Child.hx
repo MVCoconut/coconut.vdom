@@ -1,6 +1,7 @@
 package coconut.vdom;
 
 import coconut.diffing.*;
+import coconut.diffing.VNode;
 import js.html.*;
 import js.Browser.*;
 
@@ -15,15 +16,7 @@ abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
   inline function new(n) this = n;
 
   static function element(tag, attr:Dynamic, ?children) 
-    return new Child({
-      type: tag,
-      key: attr.key,
-      ref: attr.ref,//TODO: it seems unfortunate that these are here
-      kind: VNative({
-        attributes: attr,
-        children: children
-      })
-    });
+    return VNative(tag, attr.ref, attr.key, { attributes: attr, children: children });
   
   @:from static function ofText(s:String):Child
     return element('', { text: s });
@@ -31,13 +24,14 @@ abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
   @:from static function ofInt(i:Int):Child
     return Std.string(i);
 
+  @:from static function ofNode(n:Node):Child
+    return VNativeInst(n);
+
+  @:from static function ofView(v:coconut.ui.View):Child
+    return VWidgetInst(v);
+
   static function widget<A>(name, key, ref:Dynamic, attr:A, type:WidgetType<VDom, A, Node>)
-    return new Child({
-      type: name,
-      key: key,
-      ref: ref,
-      kind: VWidget(attr, type)
-    });
+    return new Child(VWidget(name, ref, key, attr, type));
 
   public function renderInto(target:Node) 
     differ.render([this], target);
