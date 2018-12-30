@@ -5,18 +5,13 @@ import coconut.diffing.VNode;
 import js.html.*;
 import js.Browser.*;
 
-typedef VDom = {
-  var attributes:Dynamic<Any>;
-  var children:coconut.ui.Children;
-}
-
 @:pure
-abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
+abstract Child(VNode<Node>) to VNode<Node> from VNode<Node> {
   
   inline function new(n) this = n;
 
   static function element(tag, attr:Dynamic, ?children) 
-    return VNative(tag, attr.ref, attr.key, { attributes: attr, children: children });
+    return VNative(tag, attr.ref, attr.key, attr, children);
   
   @:from static function ofText(s:String):Child
     return element('', { text: s });
@@ -30,7 +25,7 @@ abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
   @:from static function ofView(v:coconut.ui.View):Child
     return VWidgetInst(v);
 
-  static function widget<A>(name, key, ref:Dynamic, attr:A, type:WidgetType<VDom, A, Node>)
+  static function widget<A>(name, key, ref:Dynamic, attr:A, type:WidgetType<A, Node>)
     return new Child(VWidget(name, ref, key, attr, type));
 
   public function renderInto(target:Node) 
@@ -41,12 +36,11 @@ abstract Child(VNode<VDom, Node>) to VNode<VDom, Node> from VNode<VDom, Node> {
 
 }
 
-
-private class DomDiffer extends Differ<VDom, js.html.Node> {
+private class DomDiffer extends Differ<js.html.Node> {
 
   public function new() {}
 
-  override function unsetLastRender(target:Node):Rendered<VDom, Node> {
+  override function unsetLastRender(target:Node):Rendered<Node> {
     var ret = untyped target._coco_;
     untyped __js__('delete {0}._coco_', target);
     return ret;
@@ -55,10 +49,10 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
   override function placeholder(target):Child
     return Child.PLACEHOLDER;
 
-  override function getLastRender(target:Node):Null<Rendered<VDom, Node>> 
+  override function getLastRender(target:Node):Null<Rendered<Node>> 
     return untyped target._coco_;
 
-  override function setLastRender(target:Node, r:Rendered<VDom, Node>) 
+  override function setLastRender(target:Node, r:Rendered<Node>) 
     untyped target._coco_ = r;
 
   override function setChildren(target:Node, children:Array<Node>) {
@@ -76,29 +70,22 @@ private class DomDiffer extends Differ<VDom, js.html.Node> {
     }
   }
 
-  override function updateNative(real:Node, nu:VDom, old:VDom, parent:Null<Widget<VDom, Node>>, later:Later) 
+  override function updateAttr<Attr>(real:Node, nuAttr:Attr, oldAttr:Attr) 
     if (real.nodeType == Node.TEXT_NODE) {
-      var text = nu.attributes.text;
-      if (text != old.attributes.text) real.nodeValue = text;
+      var text = untyped nuAttr.text;
+      if (text != untyped oldAttr.text) real.nodeValue = text;
     }
-    else {
-      var elt:Element = cast real;
-      updateObject(elt, nu.attributes, old.attributes, setProp);
-      _render(cast nu.children, elt, parent, later);
-    }
+    else updateObject((cast real:Element), cast nuAttr, cast oldAttr, setProp);
 
-  override function createNative(tag:NodeType, vdom:VDom, parent:Null<Widget<VDom, Node>>, later:Later):Node 
+  override function initAttr<Attr>(tag:NodeType, attr:Attr):Node 
     return switch tag {
       case '': 
-        document.createTextNode(vdom.attributes.text);
+        document.createTextNode(untyped attr.text);
       case other: 
-        var elt = document.createElement(tag);
-        updateObject(elt, vdom.attributes, null, setProp);
-        _render(cast vdom.children, elt, parent, later);
-        elt;
+        updateObject(document.createElement(tag), cast attr, null, setProp);
     }
 
-  override function replaceWidgetContent(prev:Map<Node, Bool>, cursor:Node, total:Int, next:Rendered<VDom, Node>, later:Later) {
+  override function replaceWidgetContent(prev:Map<Node, Bool>, cursor:Node, total:Int, next:Rendered<Node>, later:Later) {
     
     var parent = cursor.parentNode;
     
