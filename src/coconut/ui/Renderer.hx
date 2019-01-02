@@ -106,6 +106,7 @@ private class DomDiffer extends Differ<js.html.Node> {
       default:
         if (newVal == null)
           if (element.hasAttribute(name)) element.removeAttribute(name);
+          else if(name.charCodeAt(0) == 'o'.code && name.charCodeAt(1) == 'n'.code) Reflect.setField(element, name, null);
           else untyped __js__('delete {0}[{1}]', element, name);
         else      
           Reflect.setField(element, name, newVal);
