@@ -9,7 +9,7 @@ class Renderer extends coconut.diffing.Widget<Node> {
   
   static var DIFFER = new DomDiffer();
 
-  static public function mount(target:Node, vdom:Child)
+  static public function mount(target:Element, vdom:Child)
     DIFFER.render([vdom], target);
 
   static public function getNative(view:View):Null<Node>
@@ -20,6 +20,9 @@ class Renderer extends coconut.diffing.Widget<Node> {
       case null: [];
       case r: r.flatten(null);
     }
+
+  static public inline function updateAll()
+    tink.state.Observable.updateAll();
 
 }
 
