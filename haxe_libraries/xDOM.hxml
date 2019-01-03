@@ -1,0 +1,5 @@
+-D xDOM=0.1.0
+# @install: lix --silent download "haxelib:/xDOM#0.1.0" into xDOM/0.1.0/haxelib
+-lib tink_domspec
+-lib tink_macro
+-cp ${HAXE_LIBCACHE}/xDOM/0.1.0/haxelib/src

@@ -1,3 +1,3 @@
 package coconut.ui;
 
-typedef RenderResult = vdom.VNode;
+typedef RenderResult = coconut.vdom.Child;

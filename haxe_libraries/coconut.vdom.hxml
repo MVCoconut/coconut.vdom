@@ -1,7 +1,8 @@
 -cp src
 -D coconut.vdom
+-lib coconut.diffing
 extraParams.hxml
 -lib tink_hxx
 -lib tink_csss
 -lib tink_state
--lib js-virtual-dom
+-lib xDOM

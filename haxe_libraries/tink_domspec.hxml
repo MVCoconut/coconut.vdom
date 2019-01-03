@@ -1,0 +1,4 @@
+-D tink_domspec=0.1.2
+# @install: lix --silent download "gh://github.com/haxetink/tink_domspec#86f77bdf22f109f30178447678a120bc318a386c" into tink_domspec/0.1.2/github/86f77bdf22f109f30178447678a120bc318a386c
+-lib tink_macro
+-cp ${HAXE_LIBCACHE}/tink_domspec/0.1.2/github/86f77bdf22f109f30178447678a120bc318a386c/src
