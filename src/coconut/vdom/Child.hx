@@ -28,7 +28,7 @@ abstract Child(VNode<Node>) to VNode<Node> from VNode<Node> {
     return new Child(VWidget(name, ref, key, attr, type));
 
   @:deprecated('Use coconut.ui.Renderer.mount instead')
-  public function renderInto(target:Node) 
+  public function renderInto(target:Element) 
     coconut.ui.Renderer.mount(target, this);
 
 }
