@@ -5,7 +5,7 @@ import coconut.vdom.Child;
 import js.Browser.*;
 import js.html.*;
 
-class Renderer extends coconut.diffing.Widget<Node> {
+class Renderer {
   
   static var DIFFER = new DomDiffer();
 
