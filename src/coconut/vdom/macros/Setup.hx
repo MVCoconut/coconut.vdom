@@ -58,9 +58,7 @@ class Setup {
   }
 
   static function all() 
-    HXX.generator = new Generator(
-      Tag.extractAllFrom(macro coconut.vdom.Html)
-    );
+    HXX.defaults.whenever(Tag.extractAllFrom(macro coconut.vdom.Html));
   
 }
 #end
