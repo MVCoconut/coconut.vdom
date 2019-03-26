@@ -5,7 +5,10 @@ import js.Browser.*;
 class Playground {
 
   static function main() {
-    hxx('<HelloView />').renderInto(document.body.appendChild(document.createDivElement()));
+    Renderer.mount(
+      cast document.body.appendChild(document.createDivElement()),
+      hxx('<HelloView />')
+    );
   }
 }
 
