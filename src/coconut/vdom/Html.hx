@@ -22,7 +22,7 @@ class Html {
     return VNative(Text.inst, null, null, value, null);
 
   static inline function h(tag:String, attr:Dynamic, ?children:coconut.ui.Children):Child 
-    return cast VNative(nodeType(tag), attr.ref, attr.key, cast children);
+    return cast VNative(nodeType(tag), attr.ref, attr.key, attr, cast children);
 
   static public inline function raw(attr):Child
     return HtmlFragment.fromHxx(attr);
