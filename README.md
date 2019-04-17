@@ -2,7 +2,7 @@
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/MVCoconut/Lobby)
 
-A pure Haxe virtual dom renderer for [coconut.ui](https://github.com/MVCoconut/coconut.diffing) based on [coconut.diffing](https://github.com/MVCoconut/coconut.diffing).
+A pure Haxe virtual dom renderer for [coconut.ui](https://github.com/MVCoconut/coconut.ui) based on [coconut.diffing](https://github.com/MVCoconut/coconut.diffing).
 
 Differences from coconut.react:
 
