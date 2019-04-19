@@ -1,8 +1,9 @@
 package coconut.vdom;
 
-import coconut.diffing.Differ;
+import coconut.diffing.*;
 import coconut.diffing.VNode;
 import coconut.diffing.NodeType;
+import coconut.ui.RenderResult;
 import js.html.*;
 import js.Browser.document;
 
@@ -18,14 +19,14 @@ class Html {
       case v: v;
     }
 
-  static public inline function text(value:String):Child
+  static public inline function text(value:String):RenderResult
     return VNative(Text.inst, null, null, value, null);
 
-  static inline function h(tag:String, attr:Dynamic, ?children:coconut.ui.Children):Child 
-    return cast VNative(nodeType(tag), attr.ref, attr.key, attr, cast children);
+  static inline function h(tag:String, ref:Dynamic->Void, key:Key, attr:Dynamic, ?children:coconut.ui.Children):RenderResult 
+    return VNode.native(nodeType(tag), ref, key, attr, children);
 
-  static public inline function raw(attr):Child
-    return HtmlFragment.fromHxx(attr);
+  static public inline function raw(hxxMeta, attr):RenderResult
+    return HtmlFragment.fromHxx(hxxMeta, attr);
 }
 
 private class HtmlFragment extends coconut.ui.View {
@@ -38,7 +39,7 @@ private class HtmlFragment extends coconut.ui.View {
   var lastContent:String;
 
   function render()
-    return @:privateAccess Html.h(tag, { className: className, ref: function (e) this.root = e });
+    return @:privateAccess Html.h(tag, function (e) this.root = e, null, { className: className });
 
   function viewDidMount() {
     lastContent = tag;
@@ -93,7 +94,6 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
 
   static inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      case 'key' | 'ref':
       case 'style':
         Differ.updateObject(element.style, newVal, oldVal, setField);
       case 'attributes':

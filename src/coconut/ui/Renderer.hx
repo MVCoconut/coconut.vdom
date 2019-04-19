@@ -1,7 +1,6 @@
 package coconut.ui;
 
 import coconut.diffing.*;
-import coconut.vdom.Child;
 import js.Browser.*;
 import js.html.*;
 
@@ -9,7 +8,7 @@ class Renderer {
   
   static var DIFFER = new Differ(new DomBackend());
 
-  static public function mount(target:Element, vdom:Child)
+  static public function mount(target:Element, vdom:RenderResult)
     DIFFER.render([vdom], target);
 
   static public function getNative(view:View):Null<Node>
@@ -29,13 +28,16 @@ class Renderer {
 private class DomCursor implements Cursor<Node> {
   var parent:Node;
   var cur:Node;
-  public function new(target:Node) {
-    this.cur = target;
-    this.parent = target.parentNode;
+  public function new(parent:Node, cur:Node) {
+    this.parent = parent;
+    this.cur = cur;
   }
 
-  public function insert(real:Node):Void 
+  public function insert(real:Node) { 
+    var inserted = real.parentNode != parent;
     parent.insertBefore(real, cur);
+    return inserted;
+  }
 
   public function step():Bool 
     return switch cur {
@@ -43,13 +45,23 @@ private class DomCursor implements Cursor<Node> {
       case v: (cur = v.nextSibling) != null;
     }
 
+  public function delete():Bool 
+    return
+      switch cur {
+        case null: false;
+        case v: 
+          cur = v.nextSibling;
+          parent.removeChild(v);
+          true;
+      }
+
   public function current():Node 
     return cur;
 }
 
 private class DomBackend implements Applicator<Node> {
 
-  static var PLACEHOLDER:Child = '';
+  static var PLACEHOLDER:RenderResult = '';
 
   public function new() {}
 
@@ -59,13 +71,13 @@ private class DomBackend implements Applicator<Node> {
     return ret;
   }
 
-  public function removeChild(parent:Node, child:Node)
-    parent.removeChild(child);
+  public function traverseSiblings(first:Node)
+    return new DomCursor(first.parentNode, first);
 
-  public function createCursor(target:Node)
-    return new DomCursor(target);
+  public function traverseChildren(parent:Node)
+    return new DomCursor(parent, parent.firstChild);
 
-  public  function placeholder(target):Child
+  public function placeholder(target):RenderResult
     return PLACEHOLDER;
 
   public function getLastRender(target:Node):Null<Rendered<Node>> 
@@ -73,19 +85,4 @@ private class DomBackend implements Applicator<Node> {
 
   public function setLastRender(target:Node, r:Rendered<Node>) 
     untyped target._coco_ = r;
-
-  public function setChildren(target:Node, children:Array<Node>) {
-    var pos = 0;
-    if (children != null)
-      for (nu in children) {
-        var old = target.childNodes[pos++];
-        if (old != nu) 
-          target.insertBefore(nu, old);
-      }
-    for (i in pos...target.childNodes.length)
-      target.removeChild(target.childNodes[pos]);
-  }
-
-  public function getParent(target:Node)
-    return target.parentNode;
 }
