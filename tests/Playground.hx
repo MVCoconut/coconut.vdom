@@ -23,8 +23,8 @@ class HelloView extends View
   function render() '<HelloSubView ref=${sub} />';
 
   override function viewDidMount()
-    console.log("HelloView afterMounting", sub.current); //it's always null
+    console.log("HelloView afterMounting", sub); //it's always null
 
   override function viewDidUpdate()
-    console.log("HelloView afterPatching", sub.current); //it's always null
+    console.log("HelloView afterPatching", sub); //it's always null
 }

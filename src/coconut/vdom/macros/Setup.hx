@@ -23,21 +23,29 @@ class Setup {
         access: [AStatic, APublic, AInline],
         kind: FFun({
           var et = tag.dom.toComplex();
-          var args = [{
-            name: 'attr',
-            type: [
-              tag.attr, 
-              macro : tink.domspec.Events<$et>,
-              macro : { 
-                @:hxxCustomAttributes(~/^(data-|aria-)/)
-                @:optional var attributes(default, never):Dynamic<xdom.html.Dataset.DatasetValue>; 
+          var args = [
+            {
+              name: 'hxxMeta',
+              type: macro : { 
                 @:optional var key(default, never):coconut.diffing.Key;
-                @:optional var ref(default, never):coconut.ui.Ref.RefSetter<$et>;
+                @:optional var ref(default, never):coconut.ui.Ref<$et>;
               },
-            ].intersect().sure(),
-            opt: false
-          }];
-          var callArgs = [macro $v{name}, macro attr];
+              opt: false
+            },
+            {
+              name: 'attr',
+              type: [
+                tag.attr, 
+                macro : tink.domspec.Events<$et>,
+                macro : { 
+                  @:hxxCustomAttributes(~/^(data-|aria-)/)
+                  @:optional var attributes(default, never):Dynamic<xdom.html.Dataset.DatasetValue>; 
+                },
+              ].intersect().sure(),
+              opt: false
+            }
+          ];
+          var callArgs = [macro $v{name}, macro hxxMeta.ref, macro hxxMeta.key, macro attr];
           if (tag.kind != VOID) {
             args.push({
               name: 'children',
@@ -49,7 +57,7 @@ class Setup {
           {
             args: args,
             expr: macro return h($a{callArgs}),
-            ret: macro : coconut.vdom.Child
+            ret: macro : coconut.ui.RenderResult
           }
         })
       });
