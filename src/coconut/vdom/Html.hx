@@ -66,12 +66,18 @@ private class Text implements NodeType<String, Node> {
 }
 
 private class Elt<Attr:{}> implements NodeType<Attr, Element> {
+  
+  static inline var SVG = 'http://www.w3.org/2000/svg';
+  static var namespaces = [
+    'svg' => SVG,
+  ];
+  
   var ns:String;
   var tag:String;
 
   public function new(tag:String) {
     this.tag = switch tag.split(':') {
-      case [ns, tag]: 
+      case [namespaces[_] => ns, tag]: 
         this.ns = ns;
         tag;
       default: tag;
@@ -82,15 +88,38 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
     var ret =
       if (ns == null) document.createElement(tag);
       else document.createElementNS(ns, tag);
-    Differ.updateObject(ret, attr, null, setProp);
+    Differ.updateObject(ret, attr, null, switch ns {
+      case SVG: setSvgProp;
+      default: setProp;
+    });
     return ret;
   }
 
-  public function update(target, old:Attr, nu:Attr) 
-    Differ.updateObject(target, nu, old, setProp);
+  public function update(target:Element, old:Attr, nu:Attr) 
+    Differ.updateObject(target, nu, old, switch target.namespaceURI {
+      case SVG: setSvgProp;
+      default: setProp;
+    });
 
   static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     Reflect.setField(target, name, newVal);        
+
+  static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
+    switch name {
+      case 'viewBox':
+        if (newVal == null)
+          element.removeAttributeNS(SVG, name);
+        else
+          element.setAttributeNS(SVG, name, newVal);
+      case 'xmlns':
+      case _ if (untyped __js__('{0} in {1}', name, element)):
+        setProp(element, name, newVal, oldVal);
+      default:
+        if (newVal == null)
+          element.removeAttribute(name);
+        else
+          element.setAttribute(name, newVal);
+    }
 
   static inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {

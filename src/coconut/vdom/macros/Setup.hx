@@ -15,12 +15,23 @@ class Setup {
     var ret = Context.getBuildFields();
     for (name in tags.keys()) {
       var tag = tags[name];
+      var fqn = switch tag.domCt {
+        case macro : js.html.svg.$_: 'svg:$name';
+        default: name;
+      }
+      
+      ret.push({
+        name: name.toUpperCase(),
+        pos: tag.pos,
+        access: [AStatic],
+        kind: FProp('default', 'never', null, macro nodeType($v{fqn})),
+      });
       ret.push({
         name: name,
         pos: tag.pos,
         access: [AStatic, APublic, AInline],
         kind: FFun({
-          var et = tag.dom.toComplex();
+          var et = tag.domCt;
           var args = [
             {
               name: 'hxxMeta',
@@ -43,7 +54,7 @@ class Setup {
               opt: false
             }
           ];
-          var callArgs = [macro $v{name}, macro hxxMeta.ref, macro hxxMeta.key, macro attr];
+          var callArgs = [macro $i{name.toUpperCase()}, macro cast hxxMeta.ref, macro hxxMeta.key, macro attr];
           if (tag.kind != VOID) {
             args.push({
               name: 'children',
@@ -54,11 +65,12 @@ class Setup {
           }
           {
             args: args,
-            expr: macro return h($a{callArgs}),
+            expr: macro return VNode.native($a{callArgs}),
             ret: macro : coconut.ui.RenderResult
           }
         })
       });
+      
     }
     return ret;
   }

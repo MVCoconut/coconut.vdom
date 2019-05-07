@@ -2,3 +2,4 @@
 -cp tests
 -main Playground
 -js bin/js/tests.js
+-dce full
