@@ -10,8 +10,6 @@ import tink.hxx.*;
 using tink.MacroApi;
 
 class Setup {
-  
-  static var registered = false;
 
   static function addTags() {
     var ret = Context.getBuildFields();
