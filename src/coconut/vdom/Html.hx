@@ -30,7 +30,7 @@ class Html {
 }
 
 private class HtmlFragment extends coconut.ui.View {
-  @:attribute var content:String;
+  @:tracked @:attribute var content:String;
   @:attribute var tag:String = 'span'; 
   @:attribute var className:tink.domspec.ClassName = null;
   
