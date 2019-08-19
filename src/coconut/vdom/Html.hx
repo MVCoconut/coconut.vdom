@@ -121,10 +121,13 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
           element.setAttribute(name, newVal);
     }
 
+  static inline function setStyle(target:CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic) 
+    Reflect.setField(target, name, if (newVal == null) null else newVal);
+  
   static inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
       case 'style':
-        Differ.updateObject(element.style, newVal, oldVal, setField);
+        Differ.updateObject(element.style, newVal, oldVal, setStyle);
       case 'attributes':
         Differ.updateObject(element, newVal, oldVal, updateAttribute);
       case 'className' if (!newVal):
