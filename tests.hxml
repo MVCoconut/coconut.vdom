@@ -1,3 +1,5 @@
 -cp tests
 -lib coconut.vdom
 -main RunTests
+
+-lib tink_unittest

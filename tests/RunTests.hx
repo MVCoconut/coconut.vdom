@@ -2,31 +2,37 @@ package ;
 
 import js.html.Element;
 import js.Browser.*;
-import coconut.Ui;
+import coconut.Ui.*;
 import coconut.ui.*;
 import coconut.vdom.*;
+import tink.unit.*;
+import tink.testrunner.*;
 
+@:asserts
 class RunTests {
 
   static function main() {
-    
-    travix.Logger.exit(
-      try {
-        travix.Logger.println('... works');
-        0;
-      }
-      catch (e:Dynamic) {
-        travix.Logger.println(Std.string(e));
-        500;
-      }
-    ); // make sure we exit properly, which is necessary on some targets, e.g. flash & (phantom)js
+    Runner.run(TestBatch.make([
+      new RunTests(),
+    ])).handle(Runner.exit);
+  }
+  
+  public function new() {}
+  public function basic() {
+    var div = document.createDivElement();
+    div.id = 'app';
+    document.body.appendChild(div);
+    Renderer.mount(div, hxx('<Bar/>'));
+    asserts.assert(document.getElementById('foo-42') != null);
+    document.body.removeChild(div);
+    return asserts.done();
   }
   
 }
 
 class Foo extends View {
   @:attribute var foo:Int;
-  function render() '<div />';
+  function render() '<div id="foo-$foo"/>';
 }
 
 class Bar extends View {
