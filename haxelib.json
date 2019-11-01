@@ -9,8 +9,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.5.0",
-	"releasenote": "Update for coconut.ui 0.7",
+	"version": "0.7.0",
+	"releasenote": "API Overhual",
 	"tags": [
 		"ui",
 		"js",
