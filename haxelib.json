@@ -2,15 +2,15 @@
 	"name": "coconut.vdom",
 	"classPath": "src",
 	"dependencies": {
-		"coconut.diffing": "",
-		"xDOM": ""
+		"xDOM": "",
+		"coconut.diffing": ""
 	},
 	"url": "https://github.com/MVCoconut/coconut.vdom/",
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.7.1",
-	"releasenote": "API Overhual",
+	"version": "0.7.2",
+	"releasenote": "API overhaul.",
 	"tags": [
 		"ui",
 		"js",
