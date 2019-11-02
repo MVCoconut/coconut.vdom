@@ -2,8 +2,8 @@
 	"name": "coconut.vdom",
 	"classPath": "src",
 	"dependencies": {
-		"coconut.diffing": "git:https://github.com/MVCoconut/coconut.diffing",
-		"xDOM": "git:https://github.com/back2dos/xDOM"
+		"coconut.diffing": "",
+		"xDOM": ""
 	},
 	"url": "https://github.com/MVCoconut/coconut.vdom/",
 	"contributors": [
