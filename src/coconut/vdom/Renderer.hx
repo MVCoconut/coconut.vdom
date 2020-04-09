@@ -1,11 +1,12 @@
 package coconut.vdom;
 
+#if !macro
 import coconut.diffing.*;
 import js.Browser.*;
 import js.html.*;
 
 class Renderer {
-  
+
   static var DIFFER = new Differ(new DomBackend());
 
   static public function mount(target:Element, vdom:RenderResult)
@@ -23,6 +24,8 @@ class Renderer {
   static public inline function updateAll()
     tink.state.Observable.updateAll();
 
+  static public macro function hxx(e);
+
 }
 
 private class DomCursor implements Cursor<Node> {
@@ -33,29 +36,29 @@ private class DomCursor implements Cursor<Node> {
     this.cur = cur;
   }
 
-  public function insert(real:Node) { 
+  public function insert(real:Node) {
     var inserted = real.parentNode != parent;
     parent.insertBefore(real, cur);
     return inserted;
   }
 
-  public function step():Bool 
+  public function step():Bool
     return switch cur {
       case null: false;
       case v: (cur = v.nextSibling) != null;
     }
 
-  public function delete():Bool 
+  public function delete():Bool
     return
       switch cur {
         case null: false;
-        case v: 
+        case v:
           cur = v.nextSibling;
           parent.removeChild(v);
           true;
       }
 
-  public function current():Node 
+  public function current():Node
     return cur;
 }
 
@@ -80,9 +83,15 @@ private class DomBackend implements Applicator<Node> {
   public function placeholder(target):RenderResult
     return PLACEHOLDER;
 
-  public function getLastRender(target:Node):Null<Rendered<Node>> 
+  public function getLastRender(target:Node):Null<Rendered<Node>>
     return untyped target._coco_;
 
-  public function setLastRender(target:Node, r:Rendered<Node>) 
+  public function setLastRender(target:Node, r:Rendered<Node>)
     untyped target._coco_ = r;
 }
+#else
+class Renderer {
+  static public macro function hxx(e)
+    return coconut.ui.macros.HXX.parse(e, 'coconut.diffing.VNode.fragment');
+}
+#end
