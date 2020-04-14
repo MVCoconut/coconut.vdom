@@ -19,7 +19,7 @@ class Setup {
         case macro : js.html.svg.$_: 'svg:$name';
         default: name;
       }
-      
+
       ret.push({
         name: name.toUpperCase(),
         pos: tag.pos,
@@ -35,7 +35,7 @@ class Setup {
           var args = [
             {
               name: 'hxxMeta',
-              type: macro : { 
+              type: macro : {
                 @:optional var key(default, never):coconut.diffing.Key;
                 @:optional var ref(default, never):coconut.ui.Ref<$et>;
               },
@@ -44,11 +44,11 @@ class Setup {
             {
               name: 'attr',
               type: [
-                tag.attr, 
+                tag.attr,
                 macro : tink.domspec.Events<$et>,
-                macro : { 
+                macro : {
                   @:hxxCustomAttributes(~/^(data-|aria-)/)
-                  @:optional var attributes(default, never):Dynamic<xdom.html.Dataset.DatasetValue>; 
+                  @:optional var attributes(default, never):Dynamic<xdom.html.Dataset.DatasetValue>;
                 },
               ].intersect().sure(),
               opt: false
@@ -58,7 +58,7 @@ class Setup {
           if (tag.kind != VOID) {
             args.push({
               name: 'children',
-              type: macro : coconut.ui.Children,
+              type: macro : coconut.vdom.Children,
               opt: true
             });
             callArgs.push(macro children);
@@ -66,17 +66,17 @@ class Setup {
           {
             args: args,
             expr: macro return VNode.native($a{callArgs}),
-            ret: macro : coconut.ui.RenderResult
+            ret: macro : coconut.vdom.RenderResult
           }
         })
       });
-      
+
     }
     return ret;
   }
 
-  static function all() 
+  static function all()
     HXX.defaults.whenever(Tag.extractAllFrom(macro coconut.vdom.Html));
-  
+
 }
 #end

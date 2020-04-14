@@ -10,19 +10,19 @@ import js.Browser.document;
 @:build(coconut.vdom.macros.Setup.addTags())
 class Html {
 
-  static var nodeTypes = new Map<String, NodeType<Dynamic, Element>>();
+  static var nodeTypes = new Map<String, NodeType<Dynamic, Node>>();
 
-  static public function nodeType<A>(tag:String):NodeType<A, Element> 
+  static public function nodeType<A>(tag:String):NodeType<A, Node>
     return cast switch nodeTypes[tag] {
       case null:
-        nodeTypes[tag] = new Elt(tag);
+        nodeTypes[tag] = cast new Elt(tag);
       case v: v;
     }
 
   static public inline function text(value:String):RenderResult
     return VNative(Text.inst, null, null, value, null);
 
-  static inline function h(tag:String, ref:Dynamic->Void, key:Key, attr:Dynamic, ?children:coconut.ui.Children):RenderResult 
+  static inline function h(tag:String, ref:Dynamic->Void, key:Key, attr:Dynamic, ?children:coconut.vdom.Children):RenderResult
     return VNode.native(nodeType(tag), ref, key, attr, children);
 
   static public inline function raw(hxxMeta, attr):RenderResult
@@ -31,9 +31,9 @@ class Html {
 
 private class HtmlFragment extends coconut.ui.View {
   @:tracked @:attribute var content:String;
-  @:attribute var tag:String = 'span'; 
+  @:attribute var tag:String = 'span';
   @:attribute var className:tink.domspec.ClassName = null;
-  
+
   var root:Element;
   var lastTag:String;
   var lastContent:String;
@@ -46,38 +46,38 @@ private class HtmlFragment extends coconut.ui.View {
     root.innerHTML = lastContent = content;
   }
 
-  function viewDidUpdate() 
+  function viewDidUpdate()
     if (lastContent != content || lastTag != tag) {
       root.innerHTML = content;
       lastContent = content;
       lastTag = tag;
-    }    
+    }
 }
 
 private class Text implements NodeType<String, Node> {
   static public var inst(default, null):Text = new Text();
-  
+
   function new() {}
 
-  public function create(text) 
+  public function create(text)
     return document.createTextNode(text);
-  public function update(target:Node, old, nu) 
+  public function update(target:Node, old, nu)
     if (nu != old) target.textContent = nu;
 }
 
 private class Elt<Attr:{}> implements NodeType<Attr, Element> {
-  
+
   static inline var SVG = 'http://www.w3.org/2000/svg';
   static var namespaces = [
     'svg' => SVG,
   ];
-  
+
   var ns:String;
   var tag:String;
 
   public function new(tag:String) {
     this.tag = switch tag.split(':') {
-      case [namespaces[_] => ns, tag]: 
+      case [namespaces[_] => ns, tag]:
         this.ns = ns;
         tag;
       default: tag;
@@ -95,14 +95,14 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
     return ret;
   }
 
-  public function update(target:Element, old:Attr, nu:Attr) 
+  public function update(target:Element, old:Attr, nu:Attr)
     Differ.updateObject(target, nu, old, switch target.namespaceURI {
       case SVG: setSvgProp;
       default: setProp;
     });
 
   static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    Reflect.setField(target, name, newVal);        
+    Reflect.setField(target, name, newVal);
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
@@ -121,9 +121,9 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
           element.setAttribute(name, newVal);
     }
 
-  static inline function setStyle(target:CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic) 
+  static inline function setStyle(target:CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     Reflect.setField(target, name, if (newVal == null) null else newVal);
-  
+
   static inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
       case 'style':
@@ -137,12 +137,12 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
           if (element.hasAttribute(name)) element.removeAttribute(name);
           else if(name.charCodeAt(0) == 'o'.code && name.charCodeAt(1) == 'n'.code) Reflect.setField(element, name, null);
           else untyped __js__('delete {0}[{1}]', element, name);
-        else      
+        else
           Reflect.setField(element, name, newVal);
     }
-    
-  static inline function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic) 
+
+  static inline function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic)
     if (newVal == null) element.removeAttribute(name);
-    else element.setAttribute(name, newVal);  
+    else element.setAttribute(name, newVal);
 
 }
