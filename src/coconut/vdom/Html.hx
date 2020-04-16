@@ -106,7 +106,7 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      case 'viewBox':
+      case 'viewBox' | 'className':
         if (newVal == null)
           element.removeAttributeNS(SVG, name);
         else
