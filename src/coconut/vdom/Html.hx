@@ -112,7 +112,7 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
         else
           element.setAttributeNS(SVG, name, newVal);
       case 'xmlns':
-      case _ if (untyped __js__('{0} in {1}', name, element)):
+      case _ if (js.Syntax.code('{0} in {1}', name, element)):
         setProp(element, name, newVal, oldVal);
       default:
         if (newVal == null)
@@ -136,7 +136,7 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
         if (newVal == null)
           if (element.hasAttribute(name)) element.removeAttribute(name);
           else if(name.charCodeAt(0) == 'o'.code && name.charCodeAt(1) == 'n'.code) Reflect.setField(element, name, null);
-          else untyped __js__('delete {0}[{1}]', element, name);
+          else js.Syntax.delete(element, name);
         else
           Reflect.setField(element, name, newVal);
     }

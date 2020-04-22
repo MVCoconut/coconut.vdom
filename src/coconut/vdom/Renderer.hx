@@ -70,7 +70,7 @@ private class DomBackend implements Applicator<Node> {
 
   public function unsetLastRender(target:Node):Rendered<Node> {
     var ret = untyped target._coco_;
-    untyped __js__('delete {0}._coco_', target);
+    untyped js.Syntax.delete(target, '_coco_');
     return ret;
   }
 
