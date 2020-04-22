@@ -8,8 +8,10 @@ class Renderer {
 
   static var DIFFER = new Differ(new DomBackend());
 
-  static public function mount(target:Element, vdom:RenderResult)
+  static public function mountInto(target:Element, vdom:RenderResult)
     DIFFER.render([vdom], target);
+
+  static public macro function mount(target, markup);
 
   static public function getNative(view:View):Null<Node>
     return getAllNative(view)[0];// not quite the pinnacle of efficiency, but let's see if anyone complains
@@ -24,7 +26,6 @@ class Renderer {
     tink.state.Observable.updateAll();
 
   static public macro function hxx(e);
-
 }
 
 private class DomCursor implements Cursor<Node> {
