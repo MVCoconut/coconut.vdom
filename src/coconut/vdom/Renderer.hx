@@ -1,6 +1,5 @@
 package coconut.vdom;
 
-#if !macro
 import coconut.diffing.*;
 import js.Browser.*;
 import js.html.*;
@@ -89,9 +88,3 @@ private class DomBackend implements Applicator<Node> {
   public function setLastRender(target:Node, r:Rendered<Node>)
     untyped target._coco_ = r;
 }
-#else
-class Renderer {
-  static public macro function hxx(e)
-    return coconut.ui.macros.HXX.parse(e, 'coconut.diffing.VNode.fragment');
-}
-#end

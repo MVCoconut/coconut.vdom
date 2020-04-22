@@ -74,9 +74,5 @@ class Setup {
     }
     return ret;
   }
-
-  static function all()
-    HXX.defaults.whenever(Tag.extractAllFrom(macro coconut.vdom.Html));
-
 }
 #end
