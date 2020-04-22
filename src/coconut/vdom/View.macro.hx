@@ -6,5 +6,5 @@ class View {
 
   static function init()
     return
-      coconut.diffing.macros.ViewBuilder.init();
+      coconut.diffing.macros.ViewBuilder.init(macro : coconut.vdom.RenderResult);
 }
