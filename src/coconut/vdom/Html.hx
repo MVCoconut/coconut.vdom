@@ -3,7 +3,7 @@ package coconut.vdom;
 import coconut.diffing.*;
 import coconut.diffing.VNode;
 import coconut.diffing.NodeType;
-import coconut.ui.RenderResult;
+import coconut.vdom.RenderResult;
 import js.html.*;
 import js.Browser.document;
 
@@ -29,7 +29,7 @@ class Html {
     return HtmlFragment.fromHxx(hxxMeta, attr);
 }
 
-private class HtmlFragment extends coconut.ui.View {
+private class HtmlFragment extends coconut.vdom.View {
   @:tracked @:attribute var content:String;
   @:attribute var tag:String = 'span';
   @:attribute var className:tink.domspec.ClassName = null;

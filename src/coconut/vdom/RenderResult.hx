@@ -6,9 +6,9 @@ import js.html.*;
 
 @:pure
 abstract RenderResult(VNode<Node>) to VNode<Node> from VNode<Node> {
-  
+
   inline function new(n) this = n;
-  
+
   @:from static inline function ofText(s:String):RenderResult
     return coconut.vdom.Html.text(s);
 
@@ -18,6 +18,6 @@ abstract RenderResult(VNode<Node>) to VNode<Node> from VNode<Node> {
   @:from static function ofNode(n:Node):RenderResult
     return VNativeInst(n);
 
-  @:from static function ofView(v:coconut.ui.View):RenderResult
+  @:from static function ofView(v:coconut.vdom.View):RenderResult
     return VWidgetInst(v);
 }
