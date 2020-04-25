@@ -35,10 +35,7 @@ class Setup {
           var args = [
             {
               name: 'hxxMeta',
-              type: macro : {
-                @:optional var key(default, never):coconut.diffing.Key;
-                @:optional var ref(default, never):coconut.ui.Ref<$et>;
-              },
+              type: macro : HxxMeta<$et>,
               opt: false
             },
             {

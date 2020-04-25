@@ -25,8 +25,16 @@ class HelloSubView extends View {
 class HelloView extends View
 {
   @:ref var sub:HelloSubView;
+  @:state var count:Int = 0;
 
-  function render() '<HelloSubView ref=${sub} />';
+  function render() '
+    <div>
+      <button onclick={count++}>Click Me</button>
+      <raw content="Hahahaha!" />
+      <span>{count}</span>
+      <HelloSubView ref=${sub} />
+    </div>
+  ';
 
   override function viewDidMount()
     console.log("HelloView afterMounting", sub);

@@ -25,33 +25,47 @@ class Html {
   static inline function h(tag:String, ref:Dynamic->Void, key:Key, attr:Dynamic, ?children:coconut.vdom.Children):RenderResult
     return VNode.native(nodeType(tag), ref, key, attr, children);
 
-  static public inline function raw(hxxMeta, attr):RenderResult
-    return HtmlFragment.fromHxx(hxxMeta, attr);
+  static public function raw(hxxMeta:HxxMeta<Element>, attr:HtmlFragmentAttr & { ?tag:String }):RenderResult {
+    return VNode.native(HtmlFragment.byTag(attr.tag), cast hxxMeta.ref, hxxMeta.key, attr);
+  }
 }
 
-private class HtmlFragment extends coconut.vdom.View {
-  @:tracked @:attribute var content:String;
-  @:attribute var tag:String = 'span';
-  @:attribute var className:tink.domspec.ClassName = null;
+private typedef HxxMeta<T> = {
+  @:optional var key(default, never):Key;
+  @:optional var ref(default, never):coconut.ui.Ref<T>;
+}
 
-  var root:Element;
-  var lastTag:String;
-  var lastContent:String;
+private typedef HtmlFragmentAttr = { content:String, ?className:tink.domspec.ClassName };
 
-  function render()
-    return @:privateAccess Html.h(tag, function (e) this.root = e, null, { className: className });
+private class HtmlFragment implements NodeType<HtmlFragmentAttr, Element> {
+  static final tags = new Map();
+  static public function byTag(?tag:String):NodeType<HtmlFragmentAttr, Node> {
+    if (tag == null)
+      tag = 'span';
+    tag = tag.toUpperCase();
 
-  function viewDidMount() {
-    lastContent = tag;
-    root.innerHTML = lastContent = content;
+    return switch tags[tag] {
+      case null: tags[tag] = cast new HtmlFragment(tag);
+      case v: v;
+    }
+  }
+  public final tag:String;
+  public function new(tag)
+    this.tag = tag;
+
+  public function create(a:HtmlFragmentAttr):Element {
+    var ret = document.createElement(tag);
+    ret.className = a.className;
+    ret.innerHTML = a.content;
+    return ret;
   }
 
-  function viewDidUpdate()
-    if (lastContent != content || lastTag != tag) {
-      root.innerHTML = content;
-      lastContent = content;
-      lastTag = tag;
-    }
+  public function update(w:Element, old:HtmlFragmentAttr, nu:HtmlFragmentAttr) {
+    w.className = nu.className;
+    if (old.content != nu.content)
+      w.innerHTML = nu.content;
+  }
+
 }
 
 private class Text implements NodeType<String, Node> {
