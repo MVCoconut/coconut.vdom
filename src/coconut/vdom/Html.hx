@@ -15,7 +15,12 @@ class Html {
   static public function nodeType<A>(tag:String):NodeType<A, Node>
     return cast switch nodeTypes[tag] {
       case null:
-        nodeTypes[tag] = cast new Elt(tag);
+        nodeTypes[tag] = switch tag.split(':') {
+          case ['svg', tag]: cast new Svg(tag);
+          case [unknown, _]: throw 'unknown namespace $unknown';
+          case [_]: cast new Elt(tag);
+          default: throw 'invalid tag $tag';
+        }
       case v: v;
     }
 
@@ -79,44 +84,22 @@ private class Text implements NodeType<String, Node> {
     if (nu != old) target.textContent = nu;
 }
 
-private class Elt<Attr:{}> implements NodeType<Attr, Element> {
-
+private class Svg<Attr:{}> implements NodeType<Attr, Element> {
   static inline var SVG = 'http://www.w3.org/2000/svg';
-  static var namespaces = [
-    'svg' => SVG,
-  ];
-
-  var ns:String;
-  var tag:String;
+  final tag:String;
 
   public function new(tag:String) {
-    this.tag = switch tag.split(':') {
-      case [namespaces[_] => ns, tag]:
-        this.ns = ns;
-        tag;
-      default: tag;
-    }
+    this.tag = tag;
   }
 
   public function create(attr:Attr) {
-    var ret =
-      if (ns == null) document.createElement(tag);
-      else document.createElementNS(ns, tag);
-    Differ.updateObject(ret, attr, null, switch ns {
-      case SVG: setSvgProp;
-      default: setProp;
-    });
+    var ret = document.createElementNS(SVG, tag);
+    Differ.updateObject(ret, attr, null, setSvgProp);
     return ret;
   }
 
   public function update(target:Element, old:Attr, nu:Attr)
-    Differ.updateObject(target, nu, old, switch target.namespaceURI {
-      case SVG: setSvgProp;
-      default: setProp;
-    });
-
-  static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    Reflect.setField(target, name, newVal);
+    Differ.updateObject(target, nu, old, setSvgProp);
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
@@ -127,7 +110,7 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
           element.setAttributeNS(SVG, name, newVal);
       case 'xmlns':
       case _ if (js.Syntax.code('{0} in {1}', name, element)):
-        setProp(element, name, newVal, oldVal);
+        Elt.setProp(element, name, newVal, oldVal);
       default:
         if (newVal == null)
           element.removeAttribute(name);
@@ -135,10 +118,32 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
           element.setAttribute(name, newVal);
     }
 
+}
+
+private class Elt<Attr:{}> implements NodeType<Attr, Element> {
+
+  final tag:String;
+
+  public function new(tag:String) {
+    this.tag = tag;
+  }
+
+  public function create(attr:Attr) {
+    var ret = document.createElement(tag);
+    Differ.updateObject(ret, attr, null, setProp);
+    return ret;
+  }
+
+  public function update(target:Element, old:Attr, nu:Attr)
+    Differ.updateObject(target, nu, old, setProp);
+
+  static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
+    Reflect.setField(target, name, newVal);
+
   static inline function setStyle(target:CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     Reflect.setField(target, name, if (newVal == null) null else newVal);
 
-  static inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
+  static public inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
       case 'style':
         Differ.updateObject(element.style, newVal, oldVal, setStyle);
