@@ -9,8 +9,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.7.2",
-	"releasenote": "API overhaul.",
+	"version": "0.8.0",
+	"releasenote": "Adjust for multibackend support.",
 	"tags": [
 		"ui",
 		"js",
