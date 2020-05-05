@@ -9,8 +9,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.8.0",
-	"releasenote": "Adjust for multibackend support.",
+	"version": "0.8.1",
+	"releasenote": "Avoid diagnostic issues.",
 	"tags": [
 		"ui",
 		"js",
