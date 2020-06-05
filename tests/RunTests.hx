@@ -14,6 +14,7 @@ class RunTests {
   static function main() {
     Runner.run(TestBatch.make([
       new RunTests(),
+      new Issue32(),
     ])).handle(Runner.exit);
   }
   
