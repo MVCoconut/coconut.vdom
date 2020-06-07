@@ -37,6 +37,7 @@ class Overview extends View {
 
 	function render() '
 		<div>
+			<p>State: ${mystate}</p>
 			<Menu onClick=${getClick(mystate)}/>
 			<button id="issue32-toggle" onclick=${toggle}>Toggle</button>
 		</div>
