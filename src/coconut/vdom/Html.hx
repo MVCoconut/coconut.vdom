@@ -100,24 +100,33 @@ private class Svg<Attr:{}> implements NodeType<Attr, Element> {
 
   public function update(target:Element, old:Attr, nu:Attr)
     Differ.updateObject(target, nu, old, setSvgProp);
-
-	static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic) {
+  
+  static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic) {    
 		switch name {
 			case 'xmlns':
-			
-			case 'viewBox' | 'width' | 'height' | 'cx' | 'cy' | 'r': // ,,,				
-				newVal == null ? element.removeAttributeNS(SVG, name) : element.setAttributeNS(SVG, name, newVal);
-			
+			case 'viewBox' | 'width' | 'height' | 'cx' | 'cy' | 'r': // ,,,
+				if (newVal == null) {
+					element.removeAttributeNS(SVG, name)
+				} else {
+					element.setAttributeNS(SVG, name, newVal)
+				};
 			case 'className':
-				newVal == null ? element.removeAttributeNS(SVG, 'class') : element.setAttributeNS(SVG, 'class', newVal);
+				if (newVal == null) {
+					element.removeAttributeNS(SVG, 'class')
+				} else {
+					element.setAttributeNS(SVG, 'class', newVal)
+				};
 
 			case _ if (js.Syntax.code('{0} in {1}', name, element)):
 				Elt.setProp(element, name, newVal, oldVal);
 			default:
-				newVal == null ? element.removeAttribute(name) : element.setAttribute(name, newVal);
+				if (newVal == null) {
+					element.removeAttribute(name)
+				} else {
+					element.setAttribute(name, newVal)
+				};
 		}
 	}
-
 }
 
 private class Elt<Attr:{}> implements NodeType<Attr, Element> {
