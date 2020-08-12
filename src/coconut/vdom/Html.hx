@@ -149,7 +149,7 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
     Reflect.setField(target, name, if (newVal == null) null else newVal);
 
   static public inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    switch name {
+    switch name { 
       case 'style':
         Differ.updateObject(element.style, newVal, oldVal, setStyle);
       case 'attributes':
