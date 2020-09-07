@@ -7,6 +7,8 @@ import coconut.vdom.RenderResult;
 import js.html.*;
 import js.Browser.document;
 
+using StringTools;
+
 @:build(coconut.vdom.macros.Setup.addTags())
 class Html {
 
@@ -143,6 +145,8 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
   static inline function setStyle(target:CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     Reflect.setField(target, name, if (newVal == null) null else newVal);
 
+  static function noop(_) {}
+
   static public inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
       case 'style':
@@ -151,10 +155,24 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
         Differ.updateObject(element, newVal, oldVal, updateAttribute);
       case 'className' if (!newVal):
         element.removeAttribute('class');
+      case event if (event.fastCodeAt(0) == 'o'.code && event.fastCodeAt(1) == 'n'.code):
+
+        var event = event.substr(2);
+        var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
+        if (handler == null) {
+          untyped element.__eventHandler = handler = { handleEvent: function (e:Event) js.Lib.nativeThis[e.type](e) };
+        }
+
+        if (!handler.exists(event))
+          element.addEventListener(event, cast handler);
+
+        handler[event] = switch newVal {
+          case null: noop;
+          default: newVal;
+        }
       default:
         if (newVal == null)
           if (element.hasAttribute(name)) element.removeAttribute(name);
-          else if(name.charCodeAt(0) == 'o'.code && name.charCodeAt(1) == 'n'.code) Reflect.setField(element, name, null);
           else js.Syntax.delete(element, name);
         else
           Reflect.setField(element, name, newVal);

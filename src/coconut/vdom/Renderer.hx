@@ -64,6 +64,13 @@ private class DomCursor implements Cursor<Node> {
         case v:
           cur = v.nextSibling;
           parent.removeChild(v);
+          // Clearing event handlers is not really necessary, but some extensions (in particular adblockers) keep references to detatched nodes, so this reduces leaks
+          var handler:haxe.DynamicAccess<Event->Void> = untyped v.__eventHandler;
+          if (handler != null) {
+            js.Syntax.delete(v, '__eventHandler');
+            for (k in handler.keys())
+              v.removeEventListener(k, handler[k]);
+          }
           true;
       }
 
