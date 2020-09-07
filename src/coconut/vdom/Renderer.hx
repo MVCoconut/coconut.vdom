@@ -38,7 +38,16 @@ private class DomCursor implements Cursor<Node> {
 
   public function insert(real:Node) {
     var inserted = real.parentNode != parent;
-    parent.insertBefore(real, cur);
+    if (cur == null)
+      parent.appendChild(real);
+    else {
+      var next = real.nextSibling;
+      parent.insertBefore(real, cur);
+      if (!inserted) {
+        parent.insertBefore(cur, next);
+        cur = real.nextSibling;
+      }
+    }
     return inserted;
   }
 
