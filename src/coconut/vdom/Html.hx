@@ -111,8 +111,10 @@ private class Svg<Attr:{}> implements NodeType<Attr, Element> {
         else
           element.setAttributeNS(SVG, name, newVal);
       case 'xmlns':
-      case _ if (js.Syntax.code('{0} in {1}', name, element)):
-        Elt.setProp(element, name, newVal, oldVal);
+      case 'style':
+        Differ.updateObject(element.style, newVal, oldVal, @:privateAccess Elt.setStyle);
+      // case _ if (js.Syntax.code('{0} in {1}', name, element)):
+      //   Elt.setProp(element, name, newVal, oldVal);
       default:
         if (newVal == null)
           element.removeAttribute(name);
