@@ -111,6 +111,9 @@ private class Svg<Attr:{}> implements NodeType<Attr, Element> {
         else
           element.setAttributeNS(SVG, name, newVal);
       case 'xmlns':
+      case 'attributes':
+        Differ.updateObject(element, newVal, oldVal, @:privateAccess Elt.updateAttribute);
+
       case 'style':
         Differ.updateObject(element.style, newVal, oldVal, @:privateAccess Elt.setStyle);
       // case _ if (js.Syntax.code('{0} in {1}', name, element)):
