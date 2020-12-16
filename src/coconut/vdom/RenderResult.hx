@@ -10,10 +10,12 @@ abstract RenderResult(VNode<Node>) to VNode<Node> from VNode<Node> {
   inline function new(n) this = n;
 
   @:from static inline function ofText(s:String):RenderResult
-    return coconut.vdom.Html.text(s);
+    return
+      if (s == null) null;
+      else coconut.vdom.Html.text(s);
 
   @:from static function ofInt(i:Int):RenderResult
-    return ofText(Std.string(i));
+    return ofText('$i');
 
   @:from static function ofNode(n:Node):RenderResult
     return VNativeInst(n);
