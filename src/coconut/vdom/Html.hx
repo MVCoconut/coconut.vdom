@@ -111,8 +111,11 @@ private class Svg<Attr:{}> implements NodeType<Attr, Element> {
         else
           element.setAttributeNS(SVG, name, newVal);
       case 'xmlns':
-      case _ if (js.Syntax.code('{0} in {1}', name, element)):
-        Elt.setProp(element, name, newVal, oldVal);
+      case 'attributes':
+        Differ.updateObject(element, newVal, oldVal, @:privateAccess Elt.updateAttribute);
+
+      case 'style':
+        @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
       default:
         if (newVal == null)
           element.removeAttribute(name);
@@ -132,54 +135,177 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
 
   public function create(attr:Attr) {
     var ret = document.createElement(tag);
-    Differ.updateObject(ret, attr, null, setProp);
+    ELEMENTS.update(ret, attr, null);
     return ret;
   }
 
   public function update(target:Element, old:Attr, nu:Attr)
-    Differ.updateObject(target, nu, old, setProp);
+    ELEMENTS.update(target, nu, old);
 
   static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     Reflect.setField(target, name, newVal);
 
-  static inline function setStyle(target:CSSStyleDeclaration, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    Reflect.setField(target, name, if (newVal == null) null else newVal);
+  static final ELEMENTS = new Updater<Element, {}>(
+    (target, field) -> '$target.removeAttribute("$field")',
+    {
+      className: function (t:Element, _, v:String, _) if (!(cast v)) t.removeAttribute('class') else t.className = v,
+      style: function (t:Element, _, nu, old) updateStyle(t.style, nu, old),
+      attributes: function (t:Element, _, nu, old) Differ.updateObject(t, nu, old, updateAttribute),
+      on: addEvent,
+    },
+    (rules, field) -> 
+      if (rules.exists(field)) field
+      else if (field.startsWith('on')) 'on'
+      else null
+  );
+
+  static function addEvent(element:Element, event:String, newVal, _) {
+    var event = event.substr(2);
+    var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
+    if (handler == null) {
+      untyped element.__eventHandler = handler = { handleEvent: function (e:Event) js.Lib.nativeThis[e.type](e) };
+    }
+
+    if (!handler.exists(event))
+      element.addEventListener(event, cast handler);
+
+    handler[event] = switch newVal {
+      case null: noop;
+      default: newVal;
+    }
+  }
+
+  static final STYLES = new Updater<CSSStyleDeclaration, tink.domspec.Style>(
+    (target, field) -> '$target.$field = null',
+    null,
+    (_, _) -> null    
+  );
+
+  static function updateStyle(target:CSSStyleDeclaration, newVal:tink.domspec.Style, ?oldVal:tink.domspec.Style) 
+    STYLES.update(target, newVal, oldVal);
 
   static function noop(_) {}
-
-  static public inline function setProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    switch name {
-      case 'style':
-        Differ.updateObject(element.style, newVal, oldVal, setStyle);
-      case 'attributes':
-        Differ.updateObject(element, newVal, oldVal, updateAttribute);
-      case 'className' if (!newVal):
-        element.removeAttribute('class');
-      case event if (event.fastCodeAt(0) == 'o'.code && event.fastCodeAt(1) == 'n'.code):
-
-        var event = event.substr(2);
-        var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
-        if (handler == null) {
-          untyped element.__eventHandler = handler = { handleEvent: function (e:Event) js.Lib.nativeThis[e.type](e) };
-        }
-
-        if (!handler.exists(event))
-          element.addEventListener(event, cast handler);
-
-        handler[event] = switch newVal {
-          case null: noop;
-          default: newVal;
-        }
-      default:
-        if (newVal == null)
-          if (element.hasAttribute(name)) element.removeAttribute(name);
-          else js.Syntax.delete(element, name);
-        else
-          Reflect.setField(element, name, newVal);
-    }
 
   static inline function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic)
     if (newVal == null) element.removeAttribute(name);
     else element.setAttribute(name, newVal);
 
+}
+
+private typedef Rules<Target> = haxe.DynamicAccess<(target:Target, field:String, nu:Dynamic, old:Null<Dynamic>)->Void>;
+
+private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
+  final unset:(target:Target, field:String)->String;
+  final rules:Rules<Target>;
+  final getRule:(rules:Rules<Target>, field:String)->Null<String>;
+  public function new(unset, rules, getRule) {
+    this.unset = unset;
+    this.rules = rules;
+    this.getRule = getRule;
+  }
+
+  public function update(target:Target, newVal:Value, ?oldVal:Value) {
+    if (newVal != null) 
+      getApplicator(newVal)(target, newVal, oldVal);
+
+    if (oldVal != null) 
+      getDeleter(oldVal, newVal)(target);
+  }
+
+  final applicators = new js.lib.Map<String, (target:Target, nu:Value, ?old:Value)->Void>();
+  function getApplicator(obj:{}) {
+    var props = getFields(obj);
+    var key = props.toString();
+    var apply = applicators.get(key);
+
+    function unset(target, p)
+      return '$target.$p = null';
+
+    if (apply == null) {
+      var source = 'if (old) {';
+      
+      function add(prefix) {
+        for (p in props)
+          source += '\n  ${prefix(p)}' + switch getRule(rules, p) {
+            case null: 'if (nu.$p == null) { ${unset('target', p)} } else target.$p = nu.$p;';
+            case rule: 'this.$rule(target, "$p", nu.$p, old && old.$p);';
+          }
+      }
+
+      add(p -> 'if (nu.$p !== old.$p) ');
+      
+      source += '\n} else {';
+
+      add(p -> '');
+      
+      source += '\n}';
+      apply = cast new js.lib.Function('target', 'nu', 'old', source).bind(rules);
+      applicators.set(key, apply);
+    }
+  
+    return apply;
+  }
+
+  function noop(target:Target) {}
+  final deleters = new js.lib.Map<String, (target:Target)->Void>();
+  function getDeleter(old:{}, ?nu:{}) {
+    
+    function forFields(fields:haxe.ds.ReadOnlyArray<String>) {
+      var key = fields.toString();
+      var ret = deleters.get(key);
+      if (ret == null) {
+        var body = '';
+        for (f in fields)
+          body += '\ntarget.$f = null';
+        deleters.set(key, ret = cast new js.lib.Function('target', body));
+      }
+      return ret;
+    }
+
+    return 
+      if (nu == null) 
+        forFields(getFields(old));
+      else {
+        var oldFields = getFields(old),
+            nuFields = getFields(nu);
+
+        var nuKey = nuFields.toString(),
+            oldKey = oldFields.toString();
+
+        if (nuKey == oldKey) noop;
+        else {
+          var key = '${nuKey}:${oldKey}';
+          var ret = deleters.get(key);
+
+          if (ret == null) 
+            deleters.set(key, ret = forFields([for (f in oldFields) if (!nuFields.contains(f)) f]));
+
+          ret;
+        }
+      }
+  }  
+
+  static function getFields(o:{}) {
+    var ret = js.lib.Object.getOwnPropertyNames(o);
+    switch ret {
+      case [], [_]:
+      case [a, b]:
+        if (a > b) {
+          ret[0] = b;
+          ret[1] = a;
+        }
+      default:
+        (cast ret).sort();
+    }
+    return ret;
+    // TODO: check the caching attempt below again. Thus far profiling suggested this causes a slow down.
+    // var ret:haxe.ds.ReadOnlyArray<String> = untyped o._coco_keys;
+    // if (ret == null) {
+    //   ret = untyped Object.getOwnPropertyNames(o).sort();
+    //   js.lib.Object.defineProperty(o, '_coco_keys', { value: ret, enumerable: false });
+    //   var joined = ret.toString();
+    //   untyped ret.toString = function () return joined;
+    // }
+    // return ret;
+  }
 }
