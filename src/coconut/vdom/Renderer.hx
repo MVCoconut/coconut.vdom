@@ -79,18 +79,10 @@ private class DomCursor implements Cursor<Node> {
 
 private class DomBackend implements Applicator<Node> {
 
-  // static var PLACEHOLDER:RenderResult = '';
-
   public function new() {}
 
   public function emptyMarker()
     return document.createTextNode('');
-
-  // public function unsetLastRender(target:Node):Rendered<Node> {
-  //   var ret = untyped target._coco_;
-  //   untyped js.Syntax.delete(target, '_coco_');
-  //   return ret;
-  // }
 
   public function siblings(first:Node)
     return new DomCursor(this, first.parentNode, first);
