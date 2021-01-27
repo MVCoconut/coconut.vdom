@@ -6,21 +6,20 @@ import js.html.*;
 
 class Renderer {
 
-  static var DIFFER = new Differ(new DomBackend());
-
+  static final BACKEND = new DomBackend();
   static public function mountInto(target:Element, vdom:RenderResult)
-    DIFFER.render([vdom], target);
+    Root.fromNative((target:Node), BACKEND).render(vdom);
 
   static public macro function mount(target, markup);
 
-  static public function getNative(view:View):Null<Node>
-    return getAllNative(view)[0];// not quite the pinnacle of efficiency, but let's see if anyone complains
+  // static public function getNative(view:View):Null<Node>
+  //   return getAllNative(view)[0];// not quite the pinnacle of efficiency, but let's see if anyone complains
 
-  static public function getAllNative(view:View):Array<Node>
-    return switch @:privateAccess view._coco_lastRender {
-      case null: [];
-      case r: r.flatten(null);
-    }
+  // static public function getAllNative(view:View):Array<Node>
+  //   return switch @:privateAccess view._coco_lastRender {
+  //     case null: [];
+  //     case r: r.flatten(null);
+  //   }
 
   static public inline function updateAll()
     tink.state.Observable.updateAll();
@@ -29,9 +28,11 @@ class Renderer {
 }
 
 private class DomCursor implements Cursor<Node> {
-  var parent:Node;
+  public final applicator:Applicator<Node>;
+  final parent:Node;
   var cur:Node;
-  public function new(parent:Node, cur:Node) {
+  public function new(applicator, parent, cur) {
+    this.applicator = applicator;
     this.parent = parent;
     this.cur = cur;
   }
@@ -48,7 +49,25 @@ private class DomCursor implements Cursor<Node> {
         cur = real.nextSibling;
       }
     }
-    return inserted;
+  }
+
+  public function markForDeletion(v:Node) {
+    if (v == null || v.parentNode != parent) throw 'assert';
+    if (v == cur)
+      cur = v.nextSibling;
+
+    parent.removeChild(v);
+    // Clearing event handlers is not really necessary, but some extensions (in particular adblockers) keep references to detatched nodes, so this reduces leaks
+    var handler:haxe.DynamicAccess<Event->Void> = untyped v.__eventHandler;
+    if (handler != null) {
+      js.Syntax.delete(v, '__eventHandler');
+      for (k in handler.keys())
+        v.removeEventListener(k, handler[k]);
+    }
+  }
+
+  public function close() {
+
   }
 
   public function step():Bool
@@ -56,52 +75,26 @@ private class DomCursor implements Cursor<Node> {
       case null: false;
       case v: (cur = v.nextSibling) != null;
     }
-
-  public function delete():Bool
-    return
-      switch cur {
-        case null: false;
-        case v:
-          cur = v.nextSibling;
-          parent.removeChild(v);
-          // Clearing event handlers is not really necessary, but some extensions (in particular adblockers) keep references to detatched nodes, so this reduces leaks
-          var handler:haxe.DynamicAccess<Event->Void> = untyped v.__eventHandler;
-          if (handler != null) {
-            js.Syntax.delete(v, '__eventHandler');
-            for (k in handler.keys())
-              v.removeEventListener(k, handler[k]);
-          }
-          true;
-      }
-
-  public function current():Node
-    return cur;
 }
 
 private class DomBackend implements Applicator<Node> {
 
-  static var PLACEHOLDER:RenderResult = '';
+  // static var PLACEHOLDER:RenderResult = '';
 
   public function new() {}
 
-  public function unsetLastRender(target:Node):Rendered<Node> {
-    var ret = untyped target._coco_;
-    untyped js.Syntax.delete(target, '_coco_');
-    return ret;
-  }
+  public function emptyMarker()
+    return document.createTextNode('');
 
-  public function traverseSiblings(first:Node)
-    return new DomCursor(first.parentNode, first);
+  // public function unsetLastRender(target:Node):Rendered<Node> {
+  //   var ret = untyped target._coco_;
+  //   untyped js.Syntax.delete(target, '_coco_');
+  //   return ret;
+  // }
 
-  public function traverseChildren(parent:Node)
-    return new DomCursor(parent, parent.firstChild);
+  public function siblings(first:Node)
+    return new DomCursor(this, first.parentNode, first);
 
-  public function placeholder(target):RenderResult
-    return PLACEHOLDER;
-
-  public function getLastRender(target:Node):Null<Rendered<Node>>
-    return untyped target._coco_;
-
-  public function setLastRender(target:Node, r:Rendered<Node>)
-    untyped target._coco_ = r;
+  public function children(parent:Node)
+    return new DomCursor(this, parent, parent.firstChild);
 }

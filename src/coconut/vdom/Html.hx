@@ -1,8 +1,6 @@
 package coconut.vdom;
 
 import coconut.diffing.*;
-import coconut.diffing.VNode;
-import coconut.diffing.NodeType;
 import coconut.vdom.RenderResult;
 import js.html.*;
 import js.Browser.document;
@@ -12,9 +10,9 @@ using StringTools;
 @:build(coconut.vdom.macros.Setup.addTags())
 class Html {
 
-  static var nodeTypes = new Map<String, NodeType<Dynamic, Node>>();
+  static var nodeTypes = new Map<String, Factory<Dynamic, Node>>();
 
-  static public function nodeType<A>(tag:String):NodeType<A, Node>
+  static public function nodeType<A>(tag:String):Factory<A, Node>
     return cast switch nodeTypes[tag] {
       case null:
         nodeTypes[tag] = switch tag.split(':') {
@@ -27,13 +25,13 @@ class Html {
     }
 
   static public inline function text(value:String):RenderResult
-    return VNative(Text.inst, null, null, value, null);
+    return new VNative(Text.inst, value, null, null, null);
 
   static inline function h(tag:String, ref:Dynamic->Void, key:Key, attr:Dynamic, ?children:coconut.vdom.Children):RenderResult
-    return VNode.native(nodeType(tag), ref, key, attr, children);
+    return new VNative(nodeType(tag), ref, key, attr, cast children);
 
   static public function raw(hxxMeta:HxxMeta<Element>, attr:HtmlFragmentAttr & { ?tag:String }):RenderResult {
-    return VNode.native(HtmlFragment.byTag(attr.tag), cast hxxMeta.ref, hxxMeta.key, attr);
+    return new VNative(HtmlFragment.byTag(attr.tag), attr, cast hxxMeta.ref, hxxMeta.key);
   }
 }
 
@@ -44,9 +42,10 @@ private typedef HxxMeta<T> = {
 
 private typedef HtmlFragmentAttr = { content:String, ?className:tink.domspec.ClassName };
 
-private class HtmlFragment implements NodeType<HtmlFragmentAttr, Element> {
+private class HtmlFragment implements Factory<HtmlFragmentAttr, Element> {
   static final tags = new Map();
-  static public function byTag(?tag:String):NodeType<HtmlFragmentAttr, Node> {
+  public final type = new TypeId();
+  static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Node> {
     if (tag == null)
       tag = 'span';
     tag = tag.toUpperCase();
@@ -75,19 +74,21 @@ private class HtmlFragment implements NodeType<HtmlFragmentAttr, Element> {
 
 }
 
-private class Text implements NodeType<String, Node> {
+private class Text implements Factory<String, Node> {
   static public var inst(default, null):Text = new Text();
 
+  public final type = new TypeId();
   function new() {}
 
   public function create(text)
     return document.createTextNode(text);
-  public function update(target:Node, old, nu)
+  public function update(target:Node, nu, old)
     if (nu != old) target.textContent = nu;
 }
 
-private class Svg<Attr:{}> implements NodeType<Attr, Element> {
+private class Svg<Attr:{}> implements Factory<Attr, Element> {
   static inline var SVG = 'http://www.w3.org/2000/svg';
+  public final type = new TypeId();
   final tag:String;
 
   public function new(tag:String) {
@@ -96,26 +97,29 @@ private class Svg<Attr:{}> implements NodeType<Attr, Element> {
 
   public function create(attr:Attr) {
     var ret = document.createElementNS(SVG, tag);
-    Differ.updateObject(ret, attr, null, setSvgProp);
+    // update(target)
+    // Differ.updateObject(ret, attr, null, setSvgProp);
     return ret;
   }
 
-  public function update(target:Element, old:Attr, nu:Attr)
-    Differ.updateObject(target, nu, old, setSvgProp);
+  public function update(target:Element, nu:Attr, old:Attr) {
+    throw 'not implemented';
+  }
+    // Differ.updateObject(target, nu, old, setSvgProp);
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      case 'viewBox' | 'className':
-        if (newVal == null)
-          element.removeAttributeNS(SVG, name);
-        else
-          element.setAttributeNS(SVG, name, newVal);
-      case 'xmlns':
-      case 'attributes':
-        Differ.updateObject(element, newVal, oldVal, @:privateAccess Elt.updateAttribute);
+      // case 'viewBox' | 'className':
+      //   if (newVal == null)
+      //     element.removeAttributeNS(SVG, name);
+      //   else
+      //     element.setAttributeNS(SVG, name, newVal);
+      // case 'xmlns':
+      // case 'attributes':
+      //   Differ.updateObject(element, newVal, oldVal, @:privateAccess Elt.updateAttribute);
 
-      case 'style':
-        @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
+      // case 'style':
+      //   @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
       default:
         if (newVal == null)
           element.removeAttribute(name);
@@ -125,8 +129,9 @@ private class Svg<Attr:{}> implements NodeType<Attr, Element> {
 
 }
 
-private class Elt<Attr:{}> implements NodeType<Attr, Element> {
+private class Elt<Attr:{}> implements Factory<Attr, Element> {
 
+  public final type = new TypeId();
   final tag:String;
 
   public function new(tag:String) {
@@ -139,7 +144,7 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
     return ret;
   }
 
-  public function update(target:Element, old:Attr, nu:Attr)
+  public function update(target:Element, nu:Attr, old:Attr)
     ELEMENTS.update(target, nu, old);
 
   static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
@@ -150,10 +155,10 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
     {
       className: function (t:Element, _, v:String, _) if (!(cast v)) t.removeAttribute('class') else t.className = v,
       style: function (t:Element, _, nu, old) updateStyle(t.style, nu, old),
-      attributes: function (t:Element, _, nu, old) Differ.updateObject(t, nu, old, updateAttribute),
+      // attributes: function (t:Element, _, nu, old) Differ.updateObject(t, nu, old, updateAttribute),
       on: addEvent,
     },
-    (rules, field) -> 
+    (rules, field) ->
       if (rules.exists(field)) field
       else if (field.startsWith('on')) 'on'
       else null
@@ -178,10 +183,10 @@ private class Elt<Attr:{}> implements NodeType<Attr, Element> {
   static final STYLES = new Updater<CSSStyleDeclaration, tink.domspec.Style>(
     (target, field) -> '$target.$field = null',
     null,
-    (_, _) -> null    
+    (_, _) -> null
   );
 
-  static function updateStyle(target:CSSStyleDeclaration, newVal:tink.domspec.Style, ?oldVal:tink.domspec.Style) 
+  static function updateStyle(target:CSSStyleDeclaration, newVal:tink.domspec.Style, ?oldVal:tink.domspec.Style)
     STYLES.update(target, newVal, oldVal);
 
   static function noop(_) {}
@@ -205,10 +210,10 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
   }
 
   public function update(target:Target, newVal:Value, ?oldVal:Value) {
-    if (newVal != null) 
+    if (newVal != null)
       getApplicator(newVal)(target, newVal, oldVal);
 
-    if (oldVal != null) 
+    if (oldVal != null)
       getDeleter(oldVal, newVal)(target);
   }
 
@@ -223,7 +228,7 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
 
     if (apply == null) {
       var source = 'if (old) {';
-      
+
       function add(prefix) {
         for (p in props)
           source += '\n  ${prefix(p)}' + switch getRule(rules, p) {
@@ -233,23 +238,23 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
       }
 
       add(p -> 'if (nu.$p !== old.$p) ');
-      
+
       source += '\n} else {';
 
       add(p -> '');
-      
+
       source += '\n}';
       apply = cast new js.lib.Function('target', 'nu', 'old', source).bind(rules);
       applicators.set(key, apply);
     }
-  
+
     return apply;
   }
 
   function noop(target:Target) {}
   final deleters = new js.lib.Map<String, (target:Target)->Void>();
   function getDeleter(old:{}, ?nu:{}) {
-    
+
     function forFields(fields:haxe.ds.ReadOnlyArray<String>) {
       var key = fields.toString();
       var ret = deleters.get(key);
@@ -262,8 +267,8 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
       return ret;
     }
 
-    return 
-      if (nu == null) 
+    return
+      if (nu == null)
         forFields(getFields(old));
       else {
         var oldFields = getFields(old),
@@ -277,13 +282,13 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
           var key = '${nuKey}:${oldKey}';
           var ret = deleters.get(key);
 
-          if (ret == null) 
+          if (ret == null)
             deleters.set(key, ret = forFields([for (f in oldFields) if (!nuFields.contains(f)) f]));
 
           ret;
         }
       }
-  }  
+  }
 
   static function getFields(o:{}) {
     var ret = js.lib.Object.getOwnPropertyNames(o);

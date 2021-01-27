@@ -18,8 +18,8 @@ abstract RenderResult(VNode<Node>) to VNode<Node> from VNode<Node> {
     return ofText('$i');
 
   @:from static function ofNode(n:Node):RenderResult
-    return VNativeInst(n);
+    return new VNativeInst(n);
 
-  @:from static function ofView(v:coconut.vdom.View):RenderResult
-    return VWidgetInst(v);
+  // @:from static function ofView(v:coconut.vdom.View):RenderResult
+  //   return VWidgetInst(v);
 }
