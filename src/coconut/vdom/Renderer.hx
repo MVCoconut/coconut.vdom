@@ -51,23 +51,22 @@ private class DomCursor implements Cursor<Node> {
     }
   }
 
-  public function markForDeletion(v:Node) {
-    if (v == null || v.parentNode != parent) throw 'assert';
-    if (v == cur)
-      cur = v.nextSibling;
-
-    parent.removeChild(v);
-    // Clearing event handlers is not really necessary, but some extensions (in particular adblockers) keep references to detatched nodes, so this reduces leaks
-    var handler:haxe.DynamicAccess<Event->Void> = untyped v.__eventHandler;
-    if (handler != null) {
-      js.Syntax.delete(v, '__eventHandler');
-      for (k in handler.keys())
-        v.removeEventListener(k, handler[k]);
+  public function delete(count:Int) {
+    var v = cur;
+    for (i in 0...count) {
+      if (v == null || v.parentNode != parent) throw 'assert';
+      // Clearing event handlers is not really necessary, but some extensions (in particular adblockers) keep references to detatched nodes, so this reduces leaks
+      var handler:haxe.DynamicAccess<Event->Void> = untyped v.__eventHandler;
+      if (handler != null) {
+        js.Syntax.delete(v, '__eventHandler');
+        for (k in handler.keys())
+          v.removeEventListener(k, handler[k]);
+      }
+      var next = v.nextSibling;
+      parent.removeChild(v);
+      v = next;
     }
-  }
-
-  public function close() {
-
+    cur = v;
   }
 
   public function step():Bool
@@ -81,8 +80,16 @@ private class DomBackend implements Applicator<Node> {
 
   public function new() {}
 
-  public function emptyMarker()
-    return document.createTextNode('');
+  var markers = new Array<Node>();
+  public function createMarker()
+    return switch markers.pop() {
+      case null: document.createTextNode('');
+      case v: v;
+    }
+
+  public function releaseMarker(marker) {
+    markers.push(marker);// TODO: perhaps a max count wouldn't hurt
+  }
 
   public function siblings(first:Node)
     return new DomCursor(this, first.parentNode, first);
