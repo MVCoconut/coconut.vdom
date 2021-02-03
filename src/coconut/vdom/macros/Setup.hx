@@ -51,7 +51,7 @@ class Setup {
               opt: false
             }
           ];
-          var callArgs = [macro $i{name.toUpperCase()}, macro attr, macro hxxMeta.key, macro cast hxxMeta.ref];
+          var callArgs = [macro attr, macro hxxMeta.key, macro hxxMeta.ref];
           if (tag.kind != VOID) {
             args.push({
               name: 'children',
@@ -62,7 +62,7 @@ class Setup {
           }
           {
             args: args,
-            expr: macro return new VNative($a{callArgs}),
+            expr: macro return $i{name.toUpperCase()}.vnode($a{callArgs}),
             ret: macro : coconut.vdom.RenderResult
           }
         })

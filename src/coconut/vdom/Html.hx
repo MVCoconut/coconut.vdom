@@ -1,5 +1,6 @@
 package coconut.vdom;
 
+import coconut.diffing.Factory.Properties;
 import coconut.diffing.*;
 import coconut.vdom.RenderResult;
 import js.html.*;
@@ -10,28 +11,25 @@ using StringTools;
 @:build(coconut.vdom.macros.Setup.addTags())
 class Html {
 
-  static var nodeTypes = new Map<String, Factory<Dynamic, Node>>();
+  static var nodeTypes = new Map<String, Factory<Dynamic, Dynamic>>();
 
-  static public function nodeType<A>(tag:String):Factory<A, Node>
+  static public function nodeType<A, E:Node>(tag:String):Factory<A, E>
     return cast switch nodeTypes[tag] {
       case null:
         nodeTypes[tag] = switch tag.split(':') {
-          case ['svg', tag]: cast new Svg(tag);
+          case ['svg', tag]: new Svg(tag);
           case [unknown, _]: throw 'unknown namespace $unknown';
-          case [_]: cast new Elt(tag);
+          case [_]: new Elt(tag);
           default: throw 'invalid tag $tag';
         }
       case v: v;
     }
 
   static public inline function text(value:String):RenderResult
-    return new VNative(Text.inst, value, null, null, null);
-
-  static inline function h(tag:String, ref:Dynamic->Void, key:Key, attr:Dynamic, ?children:coconut.vdom.Children):RenderResult
-    return new VNative(nodeType(tag), ref, key, attr, cast children);
+    return Text.inst.vnode(value, null, null, null);
 
   static public function raw(hxxMeta:HxxMeta<Element>, attr:HtmlFragmentAttr & { ?tag:String }):RenderResult {
-    return new VNative(HtmlFragment.byTag(attr.tag), attr, cast hxxMeta.ref, hxxMeta.key);
+    return HtmlFragment.byTag(attr.tag).vnode(attr, hxxMeta.key, hxxMeta.ref);
   }
 }
 
@@ -40,12 +38,14 @@ private typedef HxxMeta<T> = {
   @:optional var ref(default, never):coconut.ui.Ref<T>;
 }
 
+private typedef Attrs = haxe.DynamicAccess<String>;
+
 private typedef HtmlFragmentAttr = { content:String, ?className:tink.domspec.ClassName };
 
 private class HtmlFragment implements Factory<HtmlFragmentAttr, Element> {
   static final tags = new Map();
   public final type = new TypeId();
-  static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Node> {
+  static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Element> {
     if (tag == null)
       tag = 'span';
     tag = tag.toUpperCase();
@@ -97,29 +97,25 @@ private class Svg<Attr:{}> implements Factory<Attr, Element> {
 
   public function create(attr:Attr) {
     var ret = document.createElementNS(SVG, tag);
-    // update(target)
-    // Differ.updateObject(ret, attr, null, setSvgProp);
+    update(ret, attr, null);
     return ret;
   }
 
-  public function update(target:Element, nu:Attr, old:Attr) {
-    throw 'not implemented';
-  }
-    // Differ.updateObject(target, nu, old, setSvgProp);
+  public function update(target:Element, nu:Attr, old:Attr)
+    Properties.set(target, nu, old, setSvgProp);
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      // case 'viewBox' | 'className':
-      //   if (newVal == null)
-      //     element.removeAttributeNS(SVG, name);
-      //   else
-      //     element.setAttributeNS(SVG, name, newVal);
-      // case 'xmlns':
-      // case 'attributes':
-      //   Differ.updateObject(element, newVal, oldVal, @:privateAccess Elt.updateAttribute);
-
-      // case 'style':
-      //   @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
+      case 'viewBox' | 'className':
+        if (newVal == null)
+          element.removeAttributeNS(SVG, name);
+        else
+          element.setAttributeNS(SVG, name, newVal);
+      case 'xmlns':
+      case 'attributes':
+        Elt.setAttributes(element, newVal, oldVal);
+      case 'style':
+        @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
       default:
         if (newVal == null)
           element.removeAttribute(name);
@@ -155,7 +151,7 @@ private class Elt<Attr:{}> implements Factory<Attr, Element> {
     {
       className: function (t:Element, _, v:String, _) if (!(cast v)) t.removeAttribute('class') else t.className = v,
       style: function (t:Element, _, nu, old) updateStyle(t.style, nu, old),
-      // attributes: function (t:Element, _, nu, old) Differ.updateObject(t, nu, old, updateAttribute),
+      attributes: function (t, _, nu, old) setAttributes(t, nu, old),
       on: addEvent,
     },
     (rules, field) ->
@@ -163,6 +159,12 @@ private class Elt<Attr:{}> implements Factory<Attr, Element> {
       else if (field.startsWith('on')) 'on'
       else null
   );
+
+  static public function setAttributes(t:Element, nu:Attrs, old:Attrs)
+    Properties.set(t, nu, old, (t, k, v, _) -> switch v {
+      case null: t.removeAttribute(k);
+      default: t.setAttribute(k, v);
+    });
 
   static function addEvent(element:Element, event:String, newVal, _) {
     var event = event.substr(2);
@@ -190,11 +192,6 @@ private class Elt<Attr:{}> implements Factory<Attr, Element> {
     STYLES.update(target, newVal, oldVal);
 
   static function noop(_) {}
-
-  static inline function updateAttribute(element:Element, name:String, newVal:Dynamic, oldVal:Dynamic)
-    if (newVal == null) element.removeAttribute(name);
-    else element.setAttribute(name, newVal);
-
 }
 
 private typedef Rules<Target> = haxe.DynamicAccess<(target:Target, field:String, nu:Dynamic, old:Null<Dynamic>)->Void>;

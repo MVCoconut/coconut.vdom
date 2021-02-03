@@ -12,14 +12,11 @@ class Renderer {
 
   static public macro function mount(target, markup);
 
-  // static public function getNative(view:View):Null<Node>
-  //   return getAllNative(view)[0];// not quite the pinnacle of efficiency, but let's see if anyone complains
+  static public function getNative(view:View):Null<Node>
+    return getAllNative(view)[0];// not quite the pinnacle of efficiency, but let's see if anyone complains
 
-  // static public function getAllNative(view:View):Array<Node>
-  //   return switch @:privateAccess view._coco_lastRender {
-  //     case null: [];
-  //     case r: r.flatten(null);
-  //   }
+  static public function getAllNative(view:View):Array<Node>
+    return Widget.getAllNative(view);
 
   static public inline function updateAll()
     tink.state.Observable.updateAll();
