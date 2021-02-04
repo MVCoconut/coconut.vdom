@@ -11,9 +11,9 @@ using StringTools;
 @:build(coconut.vdom.macros.Setup.addTags())
 class Html {
 
-  static var nodeTypes = new Map<String, Factory<Dynamic, Dynamic>>();
+  static var nodeTypes = new Map<String, Factory<Dynamic, Node, Dynamic>>();
 
-  static public function nodeType<A, E:Node>(tag:String):Factory<A, E>
+  static public function nodeType<A, E:Node>(tag:String):Factory<A, Node, E>
     return cast switch nodeTypes[tag] {
       case null:
         nodeTypes[tag] = switch tag.split(':') {
@@ -42,10 +42,10 @@ private typedef Attrs = haxe.DynamicAccess<String>;
 
 private typedef HtmlFragmentAttr = { content:String, ?className:tink.domspec.ClassName };
 
-private class HtmlFragment implements Factory<HtmlFragmentAttr, Element> {
+private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
   static final tags = new Map();
   public final type = new TypeId();
-  static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Element> {
+  static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Node, Element> {
     if (tag == null)
       tag = 'span';
     tag = tag.toUpperCase();
@@ -74,7 +74,7 @@ private class HtmlFragment implements Factory<HtmlFragmentAttr, Element> {
 
 }
 
-private class Text implements Factory<String, Node> {
+private class Text implements Factory<String, Node, Node> {
   static public var inst(default, null):Text = new Text();
 
   public final type = new TypeId();
@@ -86,7 +86,7 @@ private class Text implements Factory<String, Node> {
     if (nu != old) target.textContent = nu;
 }
 
-private class Svg<Attr:{}> implements Factory<Attr, Element> {
+private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
   static inline var SVG = 'http://www.w3.org/2000/svg';
   public final type = new TypeId();
   final tag:String;
@@ -125,7 +125,7 @@ private class Svg<Attr:{}> implements Factory<Attr, Element> {
 
 }
 
-private class Elt<Attr:{}> implements Factory<Attr, Element> {
+private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
 
   public final type = new TypeId();
   final tag:String;
