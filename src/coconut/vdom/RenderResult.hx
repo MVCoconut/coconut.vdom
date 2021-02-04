@@ -1,6 +1,5 @@
 package coconut.vdom;
 
-import coconut.diffing.VNode;
 import coconut.diffing.*;
 import js.html.*;
 
@@ -18,8 +17,11 @@ abstract RenderResult(VNode<Node>) to VNode<Node> from VNode<Node> {
     return ofText('$i');
 
   @:from static function ofNode(n:Node):RenderResult
-    return VNativeInst(n);
+    return VNode.embed(n);
 
-  @:from static function ofView(v:coconut.vdom.View):RenderResult
-    return VWidgetInst(v);
+  static public function fragment(attr:{}, children:Children):RenderResult
+    return VNode.many(children);
+
+  // @:from static function ofView(v:coconut.vdom.View):RenderResult
+  //   return VWidgetInst(v);
 }
