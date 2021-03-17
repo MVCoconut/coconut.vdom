@@ -143,9 +143,6 @@ private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
   public function update(target:Element, nu:Attr, old:Attr)
     ELEMENTS.update(target, nu, old);
 
-  static inline function setField(target:Dynamic, name:String, newVal:Dynamic, ?oldVal:Dynamic)
-    Reflect.setField(target, name, newVal);
-
   static final ELEMENTS = new Updater<Element, {}>(
     (target, field) -> '$target.removeAttribute("$field")',
     {
