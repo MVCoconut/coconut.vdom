@@ -24,17 +24,16 @@ class Renderer {
   static public macro function hxx(e);
 }
 
-private class DomCursor implements Cursor<Node> {
-  public final applicator:Applicator<Node>;
+private class DomCursor extends Cursor<Node> {
   final parent:Node;
   var cur:Node;
   public function new(applicator, parent, cur) {
-    this.applicator = applicator;
+    super(applicator);
     this.parent = parent;
     this.cur = cur;
   }
 
-  public function current()
+  override public function current()
     return cur;
 
   public function insert(real:Node) {

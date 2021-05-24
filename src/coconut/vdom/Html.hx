@@ -42,9 +42,8 @@ private typedef Attrs = haxe.DynamicAccess<String>;
 
 private typedef HtmlFragmentAttr = { content:String, ?className:tink.domspec.ClassName };
 
-private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
+private class HtmlFragment extends Factory<HtmlFragmentAttr, Node, Element> {
   static final tags = new Map();
-  public final type = new TypeId();
   static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Node, Element> {
     if (tag == null)
       tag = 'span';
@@ -59,13 +58,13 @@ private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
   public function new(tag)
     this.tag = tag;
 
-  public function adopt(target) {
-    return null;
-  }
+  // public function adopt(target) {
+  //   return null;
+  // }
 
-  public function hydrate(target, data) {
+  // public function hydrate(target, data) {
 
-  }
+  // }
 
   public function create(a:HtmlFragmentAttr):Element {
     var ret = document.createElement(tag);
@@ -82,18 +81,15 @@ private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
 
 }
 
-private class Text implements Factory<String, Node, Node> {
+private class Text extends Factory<String, Node, Node> {
   static public var inst(default, null):Text = new Text();
 
-  public final type = new TypeId();
   function new() {}
 
-  public function adopt(target:Node)
+  override public function adopt(target:Node)
     return
       if (target.nodeType == Node.TEXT_NODE) target;
       else null;
-
-  public function hydrate(target, data) {}
 
   public function create(text)
     return document.createTextNode(text);
@@ -102,20 +98,19 @@ private class Text implements Factory<String, Node, Node> {
     if (nu != old) target.textContent = nu;
 }
 
-private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
+private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
   static inline var SVG = 'http://www.w3.org/2000/svg';
-  public final type = new TypeId();
   final tag:String;
 
   public function new(tag:String) {
     this.tag = tag;
   }
 
-  public function adopt(node) {
+  override public function adopt(node:Node) {
     return null;
   }
 
-  public function hydrate(target, attr) {
+  override public function hydrate(target, attr) {
 
   }
 
@@ -149,9 +144,8 @@ private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
 
 }
 
-private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
+private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
 
-  public final type = new TypeId();
   final tag:String;
 
   public function new(tag:String) {
@@ -164,7 +158,7 @@ private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
     return ret;
   }
 
-  public function adopt(node:Node):Element
+  override public function adopt(node:Node):Element
     return
       if (node.nodeName == tag)
         cast node;
@@ -172,7 +166,7 @@ private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
         null;
 
   static var events = new Array<String>();
-  public function hydrate(target:Element, attr:Attr) {
+  override public function hydrate(target:Element, attr:Attr) {
     var events = events;
 
     js.Syntax.code('for (var name in {0}) {
