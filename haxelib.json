@@ -9,8 +9,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.8.1",
-	"releasenote": "Avoid diagnostic issues.",
+	"version": "0.9.0",
+	"releasenote": "Adjust to latest coconut.diffing",
 	"tags": [
 		"ui",
 		"js",
