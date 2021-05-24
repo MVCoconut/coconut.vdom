@@ -59,6 +59,14 @@ private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
   public function new(tag)
     this.tag = tag;
 
+  public function adopt(target) {
+    return null;
+  }
+
+  public function hydrate(target, data) {
+
+  }
+
   public function create(a:HtmlFragmentAttr):Element {
     var ret = document.createElement(tag);
     ret.className = a.className;
@@ -80,8 +88,16 @@ private class Text implements Factory<String, Node, Node> {
   public final type = new TypeId();
   function new() {}
 
+  public function adopt(target:Node)
+    return
+      if (target.nodeType == Node.TEXT_NODE) target;
+      else null;
+
+  public function hydrate(target, data) {}
+
   public function create(text)
     return document.createTextNode(text);
+
   public function update(target:Node, nu, old)
     if (nu != old) target.textContent = nu;
 }
@@ -93,6 +109,14 @@ private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
 
   public function new(tag:String) {
     this.tag = tag;
+  }
+
+  public function adopt(node) {
+    return null;
+  }
+
+  public function hydrate(target, attr) {
+
   }
 
   public function create(attr:Attr) {
@@ -131,13 +155,42 @@ private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
   final tag:String;
 
   public function new(tag:String) {
-    this.tag = tag;
+    this.tag = tag.toUpperCase();
   }
 
   public function create(attr:Attr) {
     var ret = document.createElement(tag);
     ELEMENTS.update(ret, attr, null);
     return ret;
+  }
+
+  public function adopt(node:Node):Element
+    return
+      if (node.nodeName == tag)
+        cast node;
+      else
+        null;
+
+  static var events = new Array<String>();
+  public function hydrate(target:Element, attr:Attr) {
+    var events = events;
+
+    js.Syntax.code('for (var name in {0}) {
+      if (name.startsWith("on")) {
+        {1}.push(name);
+      }
+    }', attr, events);
+
+    if (events.length > 0) {
+      var handler:haxe.DynamicAccess<Event->Void> = untyped target.__eventHandler = { handleEvent: function (e:Event) js.Lib.nativeThis[e.type](e) };
+      for (event in events) {
+        var fn = Reflect.field(attr, event);
+        event = event.substr(2);
+        target.addEventListener(event, cast handler);
+        Reflect.setField(handler, event, fn);
+      }
+      events.resize(0);
+    }
   }
 
   public function update(target:Element, nu:Attr, old:Attr)

@@ -1,4 +1,4 @@
-# @install: lix --silent download "gh://github.com/MVCoconut/coconut.diffing#975f83a89ed463513d1f9642d85780977df4a449" into coconut.diffing/0.2.1/github/975f83a89ed463513d1f9642d85780977df4a449
+# @install: lix --silent download "gh://github.com/MVCoconut/coconut.diffing#4006c620091fff20fc9a98a144057c88fdc559f9" into coconut.diffing/0.3.0/github/4006c620091fff20fc9a98a144057c88fdc559f9
 -lib coconut.ui
--cp ${HAXE_LIBCACHE}/coconut.diffing/0.2.1/github/975f83a89ed463513d1f9642d85780977df4a449/src
--D coconut.diffing=0.2.1
+-cp ${HAXE_LIBCACHE}/coconut.diffing/0.3.0/github/4006c620091fff20fc9a98a144057c88fdc559f9/src
+-D coconut.diffing=0.3.0

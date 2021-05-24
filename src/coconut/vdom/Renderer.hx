@@ -34,6 +34,9 @@ private class DomCursor implements Cursor<Node> {
     this.cur = cur;
   }
 
+  public function current()
+    return cur;
+
   public function insert(real:Node) {
     if (cur == null)
       parent.appendChild(real);
