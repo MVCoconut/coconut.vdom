@@ -56,15 +56,12 @@ private class HtmlFragment extends Factory<HtmlFragmentAttr, Node, Element> {
   }
   public final tag:String;
   public function new(tag)
-    this.tag = tag;
+    this.tag = tag.toUpperCase();
 
-  // public function adopt(target) {
-  //   return null;
-  // }
-
-  // public function hydrate(target, data) {
-
-  // }
+  override public function adopt(target:Node):Null<Element>
+    return
+      if (target.nodeName == tag) cast target;
+      else null;
 
   public function create(a:HtmlFragmentAttr):Element {
     var ret = document.createElement(tag);
@@ -103,16 +100,16 @@ private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
   final tag:String;
 
   public function new(tag:String) {
-    this.tag = tag;
+    this.tag = tag.toLowerCase();
   }
 
-  override public function adopt(node:Node) {
-    return null;
-  }
+  override public function adopt(node:Node):Element
+    return
+      if (node.isDefaultNamespace(SVG) && node.nodeName == tag) cast node;
+      else null;
 
-  override public function hydrate(target, attr) {
-
-  }
+  override public function hydrate(target:Element, attr:Attr)
+    Elt.hydrateEvents(target, attr);
 
   public function create(attr:Attr) {
     var ret = document.createElementNS(SVG, tag);
@@ -133,6 +130,8 @@ private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
       case 'xmlns':
       case 'attributes':
         Elt.setAttributes(element, newVal, oldVal);
+      case _.startsWith('on') => true:
+        Elt.addEvent(element, name, newVal, oldVal);
       case 'style':
         @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
       default:
@@ -166,7 +165,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
         null;
 
   static var events = new Array<String>();
-  override public function hydrate(target:Element, attr:Attr) {
+  static public function hydrateEvents<Attr:{}>(target:Element, attr:Attr) {
     var events = events;
 
     js.Syntax.code('for (var name in {0}) {
@@ -186,6 +185,9 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
       events.resize(0);
     }
   }
+
+  override public function hydrate(target:Element, attr:Attr)
+    hydrateEvents(target, attr);
 
   public function update(target:Element, nu:Attr, old:Attr)
     ELEMENTS.update(target, nu, old);
@@ -210,7 +212,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
       default: t.setAttribute(k, v);
     });
 
-  static function addEvent(element:Element, event:String, newVal, _) {
+  static public function addEvent(element:Element, event:String, newVal, _) {
     var event = event.substr(2);
     var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
     if (handler == null) {
