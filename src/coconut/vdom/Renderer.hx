@@ -10,6 +10,12 @@ class Renderer {
   static public function mountInto(target:Element, vdom:RenderResult)
     Root.fromNative((target:Node), BACKEND).render(vdom);
 
+  static public function hydrateInto(target:Element, vdom:RenderResult)
+    new Root((target:Node), BACKEND, vdom, Into);
+
+  static public function hydrateOnto(target:Element, vdom:RenderResult)
+    new Root((target:Node), BACKEND, vdom, Onto);
+
   static public macro function mount(target, markup);
 
   static public function getNative(view:View):Null<Node>
