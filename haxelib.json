@@ -9,8 +9,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.9.0",
-	"releasenote": "Adjust to latest coconut.diffing",
+	"version": "0.9.1",
+	"releasenote": "Fix merging events of conditional elements.",
 	"tags": [
 		"ui",
 		"js",
