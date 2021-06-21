@@ -193,12 +193,13 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
     ELEMENTS.update(target, nu, old);
 
   static final ELEMENTS = new Updater<Element, {}>(
-    (target, field) -> '$target.removeAttribute("$field")',
+    // (target, field) -> '$target.removeAttribute("$field")',
+    (target, field) -> '$target.$field = null',
     {
       className: function (t:Element, _, v:String, _) if (!(cast v)) t.removeAttribute('class') else t.className = v,
       style: function (t:Element, _, nu, old) updateStyle(t.style, nu, old),
       attributes: function (t, _, nu, old) setAttributes(t, nu, old),
-      on: addEvent,
+      on: setEvent,
     },
     (rules, field) ->
       if (rules.exists(field)) field
@@ -212,7 +213,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
       default: t.setAttribute(k, v);
     });
 
-  static public function addEvent(element:Element, event:String, newVal, _) {
+  static function setEvent(element:Element, event:String, newVal:Null<Event->Void>, _) {
     var event = event.substr(2);
     var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
     if (handler == null) {
@@ -243,7 +244,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
 private typedef Rules<Target> = haxe.DynamicAccess<(target:Target, field:String, nu:Dynamic, old:Null<Dynamic>)->Void>;
 
 private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
-  final unset:(target:Target, field:String)->String;
+  final unset:(target:String, field:String)->String;
   final rules:Rules<Target>;
   final getRule:(rules:Rules<Target>, field:String)->Null<String>;
   public function new(unset, rules, getRule) {
@@ -265,9 +266,6 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
     var props = getFields(obj);
     var key = props.toString();
     var apply = applicators.get(key);
-
-    function unset(target, p)
-      return '$target.$p = null';
 
     if (apply == null) {
       var source = 'if (old) {';
@@ -304,8 +302,11 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
       if (ret == null) {
         var body = '';
         for (f in fields)
-          body += '\ntarget.$f = null';
-        deleters.set(key, ret = cast new js.lib.Function('target', body));
+          body += '\n' + switch getRule(rules, f) {
+            case null: unset('target', f);
+            case rule: 'this.$rule(target, "$f", null);';
+          }
+        deleters.set(key, ret = cast new js.lib.Function('target', body).bind(rules));
       }
       return ret;
     }

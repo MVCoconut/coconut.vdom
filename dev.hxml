@@ -1,5 +1,5 @@
+tests.hxml
 -lib coconut.vdom
--cp tests
--main Playground
+-lib travix
 -js bin/js/tests.js
 -dce full

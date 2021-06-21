@@ -15,9 +15,10 @@ class RunTests {
     Runner.run(TestBatch.make([
       new RunTests(),
       new Issue32(),
+      new Issue37(),
     ])).handle(Runner.exit);
   }
-  
+
   public function new() {}
   public function basic() {
     var div = document.createDivElement();
@@ -28,7 +29,7 @@ class RunTests {
     document.body.removeChild(div);
     return asserts.done();
   }
-  
+
 }
 
 class Foo extends View {
