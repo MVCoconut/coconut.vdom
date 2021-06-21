@@ -122,16 +122,13 @@ private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      case 'viewBox' | 'className':
-        if (newVal == null)
-          element.removeAttributeNS(SVG, name);
-        else
-          element.setAttributeNS(SVG, name, newVal);
+      case 'className':
+        setSvgProp(element, 'class', newVal, oldVal);
       case 'xmlns':
       case 'attributes':
         Elt.setAttributes(element, newVal, oldVal);
       case _.startsWith('on') => true:
-        Elt.addEvent(element, name, newVal, oldVal);
+        Elt.setEvent(element, name, newVal, oldVal);
       case 'style':
         @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
       default:
@@ -213,7 +210,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
       default: t.setAttribute(k, v);
     });
 
-  static function setEvent(element:Element, event:String, newVal:Null<Event->Void>, _) {
+  static public function setEvent(element:Element, event:String, newVal:Null<Event->Void>, _) {
     var event = event.substr(2);
     var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
     if (handler == null) {
