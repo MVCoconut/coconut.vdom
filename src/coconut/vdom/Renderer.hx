@@ -10,6 +10,12 @@ class Renderer {
   static public function mountInto(target:Element, vdom:RenderResult)
     Root.fromNative((target:Node), BACKEND).render(vdom);
 
+  static public function hydrateInto(target:Element, vdom:RenderResult)
+    new Root((target:Node), BACKEND, vdom, Into);
+
+  static public function hydrateOnto(target:Element, vdom:RenderResult)
+    new Root((target:Node), BACKEND, vdom, Onto);
+
   static public macro function mount(target, markup);
 
   static public function getNative(view:View):Null<Node>
@@ -24,15 +30,17 @@ class Renderer {
   static public macro function hxx(e);
 }
 
-private class DomCursor implements Cursor<Node> {
-  public final applicator:Applicator<Node>;
+private class DomCursor extends Cursor<Node> {
   final parent:Node;
   var cur:Node;
   public function new(applicator, parent, cur) {
-    this.applicator = applicator;
+    super(applicator);
     this.parent = parent;
     this.cur = cur;
   }
+
+  override public function current()
+    return cur;
 
   public function insert(real:Node) {
     if (cur == null)

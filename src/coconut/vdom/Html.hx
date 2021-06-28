@@ -42,9 +42,8 @@ private typedef Attrs = haxe.DynamicAccess<String>;
 
 private typedef HtmlFragmentAttr = { content:String, ?className:tink.domspec.ClassName };
 
-private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
+private class HtmlFragment extends Factory<HtmlFragmentAttr, Node, Element> {
   static final tags = new Map();
-  public final type = new TypeId();
   static public function byTag(?tag:String):Factory<HtmlFragmentAttr, Node, Element> {
     if (tag == null)
       tag = 'span';
@@ -57,7 +56,12 @@ private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
   }
   public final tag:String;
   public function new(tag)
-    this.tag = tag;
+    this.tag = tag.toUpperCase();
+
+  override public function adopt(target:Node):Null<Element>
+    return
+      if (target.nodeName == tag) cast target;
+      else null;
 
   public function create(a:HtmlFragmentAttr):Element {
     var ret = document.createElement(tag);
@@ -74,26 +78,38 @@ private class HtmlFragment implements Factory<HtmlFragmentAttr, Node, Element> {
 
 }
 
-private class Text implements Factory<String, Node, Node> {
+private class Text extends Factory<String, Node, Node> {
   static public var inst(default, null):Text = new Text();
 
-  public final type = new TypeId();
   function new() {}
+
+  override public function adopt(target:Node)
+    return
+      if (target.nodeType == Node.TEXT_NODE) target;
+      else null;
 
   public function create(text)
     return document.createTextNode(text);
+
   public function update(target:Node, nu, old)
     if (nu != old) target.textContent = nu;
 }
 
-private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
+private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
   static inline var SVG = 'http://www.w3.org/2000/svg';
-  public final type = new TypeId();
   final tag:String;
 
   public function new(tag:String) {
-    this.tag = tag;
+    this.tag = tag.toLowerCase();
   }
+
+  override public function adopt(node:Node):Element
+    return
+      if (node.isDefaultNamespace(SVG) && node.nodeName == tag) cast node;
+      else null;
+
+  override public function hydrate(target:Element, attr:Attr)
+    Elt.hydrateEvents(target, attr);
 
   public function create(attr:Attr) {
     var ret = document.createElementNS(SVG, tag);
@@ -106,14 +122,13 @@ private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
 
   static inline function setSvgProp(element:Element, name:String, newVal:Dynamic, ?oldVal:Dynamic)
     switch name {
-      case 'viewBox' | 'className':
-        if (newVal == null)
-          element.removeAttributeNS(SVG, name);
-        else
-          element.setAttributeNS(SVG, name, newVal);
+      case 'className':
+        setSvgProp(element, 'class', newVal, oldVal);
       case 'xmlns':
       case 'attributes':
         Elt.setAttributes(element, newVal, oldVal);
+      case _.startsWith('on') => true:
+        Elt.setEvent(element, name, newVal, oldVal);
       case 'style':
         @:privateAccess Elt.updateStyle(element.style, newVal, oldVal);
       default:
@@ -125,13 +140,12 @@ private class Svg<Attr:{}> implements Factory<Attr, Node, Element> {
 
 }
 
-private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
+private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
 
-  public final type = new TypeId();
   final tag:String;
 
   public function new(tag:String) {
-    this.tag = tag;
+    this.tag = tag.toUpperCase();
   }
 
   public function create(attr:Attr) {
@@ -139,6 +153,38 @@ private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
     ELEMENTS.update(ret, attr, null);
     return ret;
   }
+
+  override public function adopt(node:Node):Element
+    return
+      if (node.nodeName == tag)
+        cast node;
+      else
+        null;
+
+  static var events = new Array<String>();
+  static public function hydrateEvents<Attr:{}>(target:Element, attr:Attr) {
+    var events = events;
+
+    js.Syntax.code('for (var name in {0}) {
+      if (name.startsWith("on")) {
+        {1}.push(name);
+      }
+    }', attr, events);
+
+    if (events.length > 0) {
+      var handler:haxe.DynamicAccess<Event->Void> = untyped target.__eventHandler = { handleEvent: function (e:Event) js.Lib.nativeThis[e.type](e) };
+      for (event in events) {
+        var fn = Reflect.field(attr, event);
+        event = event.substr(2);
+        target.addEventListener(event, cast handler);
+        Reflect.setField(handler, event, fn);
+      }
+      events.resize(0);
+    }
+  }
+
+  override public function hydrate(target:Element, attr:Attr)
+    hydrateEvents(target, attr);
 
   public function update(target:Element, nu:Attr, old:Attr)
     ELEMENTS.update(target, nu, old);
@@ -164,7 +210,7 @@ private class Elt<Attr:{}> implements Factory<Attr, Node, Element> {
       default: t.setAttribute(k, v);
     });
 
-  static function setEvent(element:Element, event:String, newVal:Null<Event->Void>, _) {
+  static public function setEvent(element:Element, event:String, newVal:Null<Event->Void>, _) {
     var event = event.substr(2);
     var handler:haxe.DynamicAccess<Event->Void> = untyped element.__eventHandler;
     if (handler == null) {
