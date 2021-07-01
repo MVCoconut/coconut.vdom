@@ -105,7 +105,7 @@ private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
 
   override public function adopt(node:Node):Element
     return
-      if (node.isDefaultNamespace(SVG) && node.nodeName == tag) cast node;
+      if ((cast node).namespaceURI == SVG && node.nodeName == tag) cast node;
       else null;
 
   override public function hydrate(target:Element, attr:Attr)
