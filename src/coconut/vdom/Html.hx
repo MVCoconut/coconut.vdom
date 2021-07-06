@@ -195,6 +195,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
     {
       className: function (t:Element, _, v:String, _) if (!(cast v)) t.removeAttribute('class') else t.className = v,
       style: function (t:Element, _, nu, old) updateStyle(t.style, nu, old),
+      role: function (t:Element, _, nu, old) if (nu == null) t.removeAttribute('role') else t.setAttribute('role', nu),// TODO: would be good to have a more generic solution
       attributes: function (t, _, nu, old) setAttributes(t, nu, old),
       on: setEvent,
     },
