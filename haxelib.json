@@ -9,8 +9,8 @@
 	"contributors": [
 		"back2dos"
 	],
-	"version": "0.10.0",
-	"releasenote": "Adjust to latest coconut.diffing and expose hydration.",
+	"version": "0.10.1",
+	"releasenote": "Fix raw tag.",
 	"tags": [
 		"ui",
 		"js",
