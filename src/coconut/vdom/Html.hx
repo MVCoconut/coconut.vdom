@@ -70,7 +70,7 @@ private class HtmlFragment extends Factory<HtmlFragmentAttr, Node, Element> {
     return ret;
   }
 
-  public function update(w:Element, old:HtmlFragmentAttr, nu:HtmlFragmentAttr) {
+  public function update(w:Element, nu:HtmlFragmentAttr, old:HtmlFragmentAttr) {
     w.className = nu.className;
     if (old.content != nu.content)
       w.innerHTML = nu.content;
