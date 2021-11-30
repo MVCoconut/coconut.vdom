@@ -13,7 +13,7 @@ class Issue37 {
     Renderer.mount(container, '
       <Isolated>
         <if ${state.value == 0}>
-          <button id="issue37" onclick=${state.set(state.value + 1)}/>
+          <button id="issue37" onclick=${() -> state.set(state.value + 1)}/>
         <else>
           <button id="issue37" />
         </if>
