@@ -25,8 +25,8 @@ class Html {
       case v: v;
     }
 
-  static public inline function text(value:String):RenderResult
-    return Text.inst.vnode(value, null, null, null);
+  static public function text(value:String):RenderResult
+    return inline Text.inst.vnode(value, null, null, null);//TODO: would be faster to have a dedicated text node type insteat of going through factories and all that
 
   static public function raw(hxxMeta:HxxMeta<Element>, attr:HtmlFragmentAttr & { ?tag:String }):RenderResult {
     return HtmlFragment.byTag(attr.tag).vnode(attr, hxxMeta.key, hxxMeta.ref);
