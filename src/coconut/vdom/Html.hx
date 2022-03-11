@@ -65,13 +65,13 @@ private class HtmlFragment extends Factory<HtmlFragmentAttr, Node, Element> {
 
   public function create(a:HtmlFragmentAttr):Element {
     var ret = document.createElement(tag);
-    ret.className = a.className;
+    ret.className = a.className != null ? a.className : "";
     ret.innerHTML = a.content;
     return ret;
   }
 
   public function update(w:Element, nu:HtmlFragmentAttr, old:HtmlFragmentAttr) {
-    w.className = nu.className;
+    w.className = nu.className != null ? nu.className : "";
     if (old.content != nu.content)
       w.innerHTML = nu.content;
   }
