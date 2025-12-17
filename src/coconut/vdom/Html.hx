@@ -190,8 +190,8 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
     ELEMENTS.update(target, nu, old);
 
   static final ELEMENTS = new Updater<Element, {}>(
-    // (target, field) -> '$target.removeAttribute("$field")',
-    (target, field) -> '$target.$field = null',
+    (target, field) -> '$target.removeAttribute("$field")',
+    (target, field, value) -> '$target.$field = $value',
     {
       className: function (t:Element, _, v:String, _) if (!(cast v)) t.removeAttribute('class') else t.className = v,
       style: function (t:Element, _, nu, old) updateStyle(t.style, nu, old),
@@ -227,11 +227,12 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
     }
   }
 
-  static final STYLES = new Updater<CSSStyleDeclaration, tink.domspec.Style>(
-    (target, field) -> '$target.$field = null',
-    null,
-    (_, _) -> null
-  );
+	static final STYLES = new Updater<CSSStyleDeclaration, tink.domspec.Style>(
+		(target, field) -> if (field.contains('-')) '$target.removeProperty("$field")' else '$target.$field = null',
+		(target, field, value) -> if (field.contains('-')) 'target.setProperty("$field", $value)' else '$target.$field = $value',
+		null,
+		(_, _) -> null
+	);
 
   static function updateStyle(target:CSSStyleDeclaration, newVal:tink.domspec.Style, ?oldVal:tink.domspec.Style)
     STYLES.update(target, newVal, oldVal);
@@ -242,117 +243,127 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
 private typedef Rules<Target> = haxe.DynamicAccess<(target:Target, field:String, nu:Dynamic, old:Null<Dynamic>)->Void>;
 
 private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
-  final unset:(target:String, field:String)->String;
-  final rules:Rules<Target>;
-  final getRule:(rules:Rules<Target>, field:String)->Null<String>;
-  public function new(unset, rules, getRule) {
-    this.unset = unset;
-    this.rules = rules;
-    this.getRule = getRule;
-  }
+	final unset:(target:String, field:String)->String;
+	final set:(target:String, field:String, value:String)->String;
+	final rules:Rules<Target>;
+	final getRule:(rules:Rules<Target>, field:String)->Null<String>;
+	public function new(unset, set, rules, getRule) {
+		this.unset = unset;
+		this.set = set;
+		this.rules = rules;
+		this.getRule = getRule;
+	}
 
-  public function update(target:Target, newVal:Value, ?oldVal:Value) {
-    if (newVal != null)
-      getApplicator(newVal)(target, newVal, oldVal);
+	static public function get(target, property:String)
+		return switch property.indexOf('-') {
+			case -1: '$target.$property';
+			default: '$target["$property"]';
+		}
 
-    if (oldVal != null)
-      getDeleter(oldVal, newVal)(target);
-  }
+	public function update(target:Target, newVal:Value, ?oldVal:Value) {
+		if (newVal != null)
+			getApplicator(newVal)(target, newVal, oldVal);
 
-  final applicators = new js.lib.Map<String, (target:Target, nu:Value, ?old:Value)->Void>();
-  function getApplicator(obj:{}) {
-    var props = getFields(obj);
-    var key = props.toString();
-    var apply = applicators.get(key);
+		if (oldVal != null)
+			getDeleter(oldVal, newVal)(target);
+	}
 
-    if (apply == null) {
-      var source = 'if (old) {';
+	final applicators = new js.lib.Map<String, (target:Target, nu:Value, ?old:Value)->Void>();
+	function getApplicator(obj:{}) {
+		var props = getFields(obj);
+		var key = props.toString();
+		var apply = applicators.get(key);
 
-      function add(prefix) {
-        for (p in props)
-          source += '\n  ${prefix(p)}' + switch getRule(rules, p) {
-            case null: 'if (nu.$p == null) { ${unset('target', p)} } else target.$p = nu.$p;';
-            case rule: 'this.$rule(target, "$p", nu.$p, old && old.$p);';
-          }
-      }
+		if (apply == null) {
+			var source = 'if (old) {';
 
-      add(p -> 'if (nu.$p !== old.$p) ');
+			function add(prefix) {
+				for (p in props)
+					source += '\n  ${prefix(p)}' + switch getRule(rules, p) {
+						case null:
+							var nu = get('nu', p);
+							'if ($nu == null) { ${unset('target', p)} } else ${set('target', p, nu)}';
+						case rule: 'this.$rule(target, "$p", ${get('nu', p)}, old && ${get('old', p)});';
+					}
+			}
 
-      source += '\n} else {';
+			add(p -> 'if (${get('nu', p)} !== ${get('old', p)}) ');
 
-      add(p -> '');
+			source += '\n} else {';
 
-      source += '\n}';
-      apply = cast new js.lib.Function('target', 'nu', 'old', source).bind(rules);
-      applicators.set(key, apply);
-    }
+			add(p -> '');
 
-    return apply;
-  }
+			source += '\n}';
+			apply = cast new js.lib.Function('target', 'nu', 'old', source).bind(rules);
+			applicators.set(key, apply);
+		}
 
-  function noop(target:Target) {}
-  final deleters = new js.lib.Map<String, (target:Target)->Void>();
-  function getDeleter(old:{}, ?nu:{}) {
+		return apply;
+	}
 
-    function forFields(fields:haxe.ds.ReadOnlyArray<String>) {
-      var key = fields.toString();
-      var ret = deleters.get(key);
-      if (ret == null) {
-        var body = '';
-        for (f in fields)
-          body += '\n' + switch getRule(rules, f) {
+	function noop(target:Target) {}
+	final deleters = new js.lib.Map<String, (target:Target)->Void>();
+	function getDeleter(old:{}, ?nu:{}) {
+
+		function forFields(fields:haxe.ds.ReadOnlyArray<String>) {
+			var key = fields.toString();
+			var ret = deleters.get(key);
+			if (ret == null) {
+				var body = '';
+				for (f in fields)
+					body += '\n' + switch getRule(rules, f) {
             case null: unset('target', f);
             case rule: 'this.$rule(target, "$f", null);';
           }
         deleters.set(key, ret = cast new js.lib.Function('target', body).bind(rules));
-      }
-      return ret;
-    }
+			}
+			return ret;
+		}
 
-    return
-      if (nu == null)
-        forFields(getFields(old));
-      else {
-        var oldFields = getFields(old),
-            nuFields = getFields(nu);
+		return
+			if (nu == null)
+				forFields(getFields(old));
+			else {
+				var oldFields = getFields(old),
+						nuFields = getFields(nu);
 
-        var nuKey = nuFields.toString(),
-            oldKey = oldFields.toString();
+				var nuKey = nuFields.toString(),
+						oldKey = oldFields.toString();
 
-        if (nuKey == oldKey) noop;
-        else {
-          var key = '${nuKey}:${oldKey}';
-          var ret = deleters.get(key);
+				if (nuKey == oldKey) noop;
+				else {
+					var key = '${nuKey}:${oldKey}';
+					var ret = deleters.get(key);
 
-          if (ret == null)
-            deleters.set(key, ret = forFields([for (f in oldFields) if (!nuFields.contains(f)) f]));
+					if (ret == null)
+						deleters.set(key, ret = forFields([for (f in oldFields) if (!nuFields.contains(f)) f]));
 
-          ret;
-        }
-      }
-  }
+					ret;
+				}
+			}
+	}
 
-  static function getFields(o:{}) {
-    var ret = js.lib.Object.getOwnPropertyNames(o);
-    switch ret {
-      case [], [_]:
-      case [a, b]:
-        if (a > b) {
-          ret[0] = b;
-          ret[1] = a;
-        }
-      default:
-        (cast ret).sort();
-    }
-    return ret;
-    // TODO: check the caching attempt below again. Thus far profiling suggested this causes a slow down.
-    // var ret:haxe.ds.ReadOnlyArray<String> = untyped o._coco_keys;
-    // if (ret == null) {
-    //   ret = untyped Object.getOwnPropertyNames(o).sort();
-    //   js.lib.Object.defineProperty(o, '_coco_keys', { value: ret, enumerable: false });
-    //   var joined = ret.toString();
-    //   untyped ret.toString = function () return joined;
-    // }
-    // return ret;
-  }
+	static function getFields(o:{}) {
+		var ret = js.lib.Object.getOwnPropertyNames(o);
+		switch ret {
+			case [], [_]:
+			case [a, b]:
+				if (a > b) {
+					ret[0] = b;
+					ret[1] = a;
+				}
+			default:
+				(cast ret).sort();
+		}
+		return ret;
+		// TODO: check the caching attempt below again. Thus far profiling suggested this causes a slow down.
+		// var ret:haxe.ds.ReadOnlyArray<String> = untyped o._coco_keys;
+		// if (ret == null) {
+		//   ret = untyped Object.getOwnPropertyNames(o).sort();
+		//   js.lib.Object.defineProperty(o, '_coco_keys', { value: ret, enumerable: false });
+		//   var joined = ret.toString();
+		//   untyped ret.toString = function () return joined;
+		// }
+		// return ret;
+	}
 }
