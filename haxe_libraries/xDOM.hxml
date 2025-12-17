@@ -1,5 +1,5 @@
--D xDOM=0.2.1
-# @install: lix --silent download "haxelib:/xDOM#0.2.1" into xDOM/0.2.1/haxelib
+# @install: lix --silent download "gh://github.com/back2dos/xdom#744a27e4fa6008483c766e1b855f189f3f8ab665" into xDOM/0.2.2/github/744a27e4fa6008483c766e1b855f189f3f8ab665
 -lib tink_csss
 -lib tink_domspec
--cp ${HAXE_LIBCACHE}/xDOM/0.2.1/haxelib/src
+-cp ${HAXE_LIBCACHE}/xDOM/0.2.2/github/744a27e4fa6008483c766e1b855f189f3f8ab665/src
+-D xDOM=0.2.2
