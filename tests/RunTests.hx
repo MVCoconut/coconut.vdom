@@ -16,6 +16,7 @@ class RunTests {
       new RunTests(),
       new Issue32(),
       new Issue37(),
+      new Issue44(),
     ])).handle(Runner.exit);
   }
 
