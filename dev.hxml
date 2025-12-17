@@ -3,3 +3,4 @@ tests.hxml
 -lib travix
 -js bin/js/tests.js
 -dce full
+-D no-deprecation-warnings

@@ -25,8 +25,8 @@ class Html {
       case v: v;
     }
 
-  static public inline function text(value:String):RenderResult
-    return Text.inst.vnode(value, null, null, null);
+  static public function text(value:String):RenderResult
+    return inline TextNode.inst.vnode(value, null, null, null);//TODO: would be faster to have a dedicated text node type insteat of going through factories and all that
 
   static public function raw(hxxMeta:HxxMeta<Element>, attr:HtmlFragmentAttr & { ?tag:String }):RenderResult {
     return HtmlFragment.byTag(attr.tag).vnode(attr, hxxMeta.key, hxxMeta.ref);
@@ -78,20 +78,24 @@ private class HtmlFragment extends Factory<HtmlFragmentAttr, Node, Element> {
 
 }
 
-private class Text extends Factory<String, Node, Node> {
-  static public var inst(default, null):Text = new Text();
+private class TextNode extends Factory<String, Node, Text> {
+  static public var inst(default, null):TextNode = new TextNode();
 
   function new() {}
 
-  override public function adopt(target:Node)
+  override public function adopt(target:Node):Text
     return
-      if (target.nodeType == Node.TEXT_NODE) target;
+      if (target.nodeType == Node.TEXT_NODE) cast target;
       else null;
+
+  override function hydrate(target:Text, data:String) 
+    if (target.textContent.length > data.length)
+      target.splitText(data.length);
 
   public function create(text)
     return document.createTextNode(text);
 
-  public function update(target:Node, nu, old)
+  public function update(target:Text, nu, old)
     if (nu != old) target.textContent = nu;
 }
 
