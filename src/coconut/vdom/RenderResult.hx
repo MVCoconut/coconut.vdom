@@ -16,6 +16,9 @@ abstract RenderResult(VNode<Node>) to VNode<Node> from VNode<Node> {
   @:from static function ofInt(i:Int):RenderResult
     return ofText('$i');
 
+  @:from static function ofFloat(f:Float):RenderResult
+    return ofText('$f');
+
   @:from static function ofNode(n:Node):RenderResult
     return VNode.embed(n);
 
