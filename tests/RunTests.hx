@@ -17,6 +17,7 @@ class RunTests {
       new Issue32(),
       new Issue37(),
       new Issue44(),
+      new SelectValue(),
     ])).handle(Runner.exit);
   }
 

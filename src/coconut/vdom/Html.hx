@@ -2,6 +2,8 @@ package coconut.vdom;
 
 import coconut.diffing.Factory.Properties;
 import coconut.diffing.*;
+import coconut.diffing.internal.RNode;
+import coconut.diffing.internal.VNative;
 import coconut.vdom.RenderResult;
 import js.html.*;
 import js.Browser.document;
@@ -19,6 +21,7 @@ class Html {
         nodeTypes[tag] = switch tag.split(':') {
           case ['svg', tag]: new Svg(tag);
           case [unknown, _]: throw 'unknown namespace $unknown';
+          case ['select']: new Select();
           case [_]: new Elt(tag);
           default: throw 'invalid tag $tag';
         }
@@ -143,14 +146,19 @@ private class Svg<Attr:{}> extends Factory<Attr, Node, Element> {
 private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
 
   final tag:String;
+  final updater:Updater<Element, {}>;
 
-  public function new(tag:String) {
+  public function new(tag:String, ?updater:Updater<Element, {}>) {
     this.tag = tag.toUpperCase();
+    this.updater = switch updater {
+      case null: ELEMENTS;
+      case v: v;
+    }
   }
 
   public function create(attr:Attr) {
     var ret = document.createElement(tag);
-    ELEMENTS.update(ret, attr, null);
+    updater.update(ret, attr, null);
     return ret;
   }
 
@@ -187,7 +195,7 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
     hydrateEvents(target, attr);
 
   public function update(target:Element, nu:Attr, old:Attr)
-    ELEMENTS.update(target, nu, old);
+    updater.update(target, nu, old);
 
   static final ELEMENTS = new Updater<Element, {}>(
     (target, field) -> '$target.removeAttribute("$field")',
@@ -240,6 +248,74 @@ private class Elt<Attr:{}> extends Factory<Attr, Node, Element> {
   static function noop(_) {}
 }
 
+private typedef SelectAttr = {
+  @:optional var value(default, never):haxe.extern.EitherType<String, Array<String>>;
+  @:optional var multiple(default, never):Bool;
+}
+
+/**
+  Supports `value` on `<select>` as React does: the options are only there after the children are rendered,
+  so the value is applied after that, on every render.
+**/
+private class Select extends Elt<SelectAttr> {
+
+  public function new()
+    super('select', Elt.ELEMENTS.with({ value: (_, _, _, _) -> {} }));
+
+  override public function vnode<RenderResult:coconut.diffing.internal.VNode<Node>>(data:SelectAttr, ?key:Key, ?ref:coconut.ui.Ref<Element>, ?children:coconut.ui.internal.Children<RenderResult>):coconut.diffing.internal.VNode<Node>
+    return new VSelect(this, data, key, ref, children);
+
+  static public function updateOptions(target:SelectElement, attr:SelectAttr)
+    switch attr.value {
+      case null:
+      case value:
+        var options = target.options;
+        if (attr.multiple || Std.isOfType(value, Array)) {
+          var values:Array<String> = if (Std.isOfType(value, Array)) value else [value];
+          for (i in 0...options.length) {
+            var option:OptionElement = cast options[i],
+                selected = values.contains(option.value);
+            if (option.selected != selected)
+              option.selected = selected;
+          }
+        }
+        else {
+          var fallback:OptionElement = null;
+          for (i in 0...options.length) {
+            var option:OptionElement = cast options[i];
+            if (option.value == (value:String)) {
+              option.selected = true;
+              return;
+            }
+            if (fallback == null && !option.disabled)
+              fallback = option;
+          }
+          if (fallback != null)
+            fallback.selected = true;
+        }
+    }
+}
+
+private class VSelect extends VNative<SelectAttr, Node, Element> {
+  override public function render(parent, cursor, later, hydrate:Bool):RNode<Node>
+    return new RSelect(this, VSelect, parent, cursor, later, hydrate);
+}
+
+private class RSelect extends RNative<SelectAttr, Node, Element> {
+
+  public function new(v:VSelect, cls, parent, cursor, later, hydrate) {
+    super(v, cls, parent, cursor, later, hydrate);
+    Select.updateOptions(cast native, v.data);
+  }
+
+  override public function update(next, cursor, later) {
+    var prev = last;
+    super.update(next, cursor, later);
+    if (last != prev)
+      Select.updateOptions(cast native, last.data);
+  }
+}
+
 private typedef Rules<Target> = haxe.DynamicAccess<(target:Target, field:String, nu:Dynamic, old:Null<Dynamic>)->Void>;
 
 private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
@@ -259,6 +335,13 @@ private class Updater<Target:{}, Value:{}> {//TODO: extract to coconut.diffing
 			case -1: '$target.$property';
 			default: '$target["$property"]';
 		}
+
+	public function with(extra:Rules<Target>) {
+		var rules = rules.copy();
+		for (field => rule in extra)
+			rules[field] = rule;
+		return new Updater<Target, Value>(unset, set, rules, getRule);
+	}
 
 	public function update(target:Target, newVal:Value, ?oldVal:Value) {
 		if (newVal != null)

@@ -47,7 +47,12 @@ class Setup {
                   @:hxxCustomAttributes(~/^(data-|aria-)/)
                   @:optional var attributes(default, never):Dynamic<xdom.html.Dataset.DatasetValue>;
                 },
-              ].intersect().sure(),
+              ].concat(switch name {
+                case 'select': [macro : {
+                  @:optional var value(default, never):haxe.extern.EitherType<String, Array<String>>;
+                }];
+                default: [];
+              }).intersect().sure(),
               opt: false
             }
           ];
