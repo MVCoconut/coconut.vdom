@@ -18,6 +18,7 @@ class RunTests {
       new Issue37(),
       new Issue44(),
       new SelectValue(),
+      new LostNode(),
     ])).handle(Runner.exit);
   }
 
