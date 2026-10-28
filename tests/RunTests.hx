@@ -18,6 +18,7 @@ class RunTests {
       new Issue37(),
       new Issue44(),
       new SelectValue(),
+      #if !coconut.vdom.terse_assert new LostNode(), #end
     ])).handle(Runner.exit);
   }
 

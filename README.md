@@ -11,3 +11,7 @@ Differences from coconut.react:
 - slightly better performance (YMMV)
 
 All in all coconut.vdom supports everything coconut.react does, except for the rendering of "pure" react components. You may find coconut.react + preact (+ preact-compat) a good middleground.
+
+## Defines
+
+- `-D coconut.vdom.terse_assert`: when something other than the renderer removes or moves a node it rendered (browser translation, extensions, direct DOM manipulation), the renderer throws an error saying where in the page that happened. This define drops the code that builds that description and throws a bare `'assert'` instead. Use it if nothing but coconut touches your DOM and you want the few bytes back.

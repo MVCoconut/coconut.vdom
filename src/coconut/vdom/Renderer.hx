@@ -63,7 +63,7 @@ private class DomCursor extends Cursor<Node> {
   public function delete(count:Int) {
     var v = cur;
     for (i in 0...count) {
-      if (v == null || v.parentNode != parent) throw 'assert';
+      if (v == null || v.parentNode != parent) throw #if coconut.vdom.terse_assert 'assert' #else lostNode(i, count, v) #end;
       // Clearing event handlers is not really necessary, but some extensions (in particular adblockers) keep references to detatched nodes, so this reduces leaks
       var handler:haxe.DynamicAccess<Event->Void> = untyped v.__eventHandler;
       if (handler != null) {
@@ -77,6 +77,30 @@ private class DomCursor extends Cursor<Node> {
     }
     cur = v;
   }
+
+  #if !coconut.vdom.terse_assert
+  // The node is gone or was moved by something else (browser translation, extensions, direct DOM changes): say where.
+  // Text nodes only show their length, since they may hold user content.
+  // `-D coconut.vdom.terse_assert` drops this (it can't be eliminated as dead code) and throws a bare 'assert'.
+  function lostNode(index:Int, count:Int, node:Null<Node>):String
+    return 'assert: node ${index + 1}/$count to delete under ${describe(parent)} (in ${ancestors(parent)}) '
+      + (if (node == null) 'is missing' else 'is ${describe(node)}, now under ${describe(node.parentNode)}')
+      + (if (document.documentElement.className.indexOf('translated-') > -1) ', page translated' else '');
+
+  static function describe(n:Null<Node>):String {
+    if (n == null) return 'nothing';
+    if (n.nodeType == Node.TEXT_NODE) return '#text(${n.textContent.length})';
+    if (n.nodeType != Node.ELEMENT_NODE) return n.nodeName;
+    final e:Element = cast n,
+          classes = (switch e.getAttribute('class') { case null: ''; case v: v; }).split(' ').filter(c -> c != '').slice(0, 2);// `className` isn't a string on SVG
+    return e.localName
+      + (if (e.id != '') '#' + e.id else '')
+      + [for (c in classes) '.' + c].join('');
+  }
+
+  static function ancestors(n:Node):String
+    return [for (_ in 0...3) if ((n = n.parentNode) != null && n.nodeType == Node.ELEMENT_NODE) describe(n)].join(' < ');
+  #end
 
   public function step():Bool
     return switch cur {
