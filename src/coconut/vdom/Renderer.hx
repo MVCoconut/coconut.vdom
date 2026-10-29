@@ -85,7 +85,11 @@ private class DomCursor extends Cursor<Node> {
   function lostNode(index:Int, count:Int, node:Null<Node>):String
     return 'assert: node ${index + 1}/$count to delete under ${describe(parent)} (in ${ancestors(parent)}) '
       + (if (node == null) 'is missing' else 'is ${describe(node)}, now under ${describe(node.parentNode)}')
-      + (if (document.documentElement.className.indexOf('translated-') > -1) ', page translated' else '');
+      + (if (isTranslated()) ', page translated' else '');
+
+  static function isTranslated():Bool
+    return document.documentElement.className.indexOf('translated-') > -1 // Google Translate
+      || document.querySelector('[_msthash]') != null; // Microsoft Translator (Edge) marks the elements it translated
 
   static function describe(n:Null<Node>):String {
     if (n == null) return 'nothing';
