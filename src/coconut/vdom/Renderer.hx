@@ -102,8 +102,12 @@ private class DomCursor extends Cursor<Node> {
       + [for (c in classes) '.' + c].join('');
   }
 
-  static function ancestors(n:Node):String
-    return [for (_ in 0...3) if ((n = n.parentNode) != null && n.nodeType == Node.ELEMENT_NODE) describe(n)].join(' < ');
+  static function ancestors(n:Node):String {
+    final ret = [];
+    while (ret.length < 3 && (n = n.parentNode) != null && n.nodeType == Node.ELEMENT_NODE)
+      ret.push(describe(n));
+    return if (ret.length == 0) 'nothing' else ret.join(' < ');
+  }
   #end
 
   public function step():Bool
