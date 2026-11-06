@@ -1,5 +1,5 @@
-# @install: lix --silent download "gh://github.com/Neverbirth/tink_domspec#04f917b6be227b9ca3524ff251987f80a44b4d1f" into tink_domspec/0.5.2/github/04f917b6be227b9ca3524ff251987f80a44b4d1f
+# @install: lix --silent download "gh://github.com/haxetink/tink_domspec#46a22029b6913a1e3059220a30cc370e7aa0721d" into tink_domspec/0.5.2/github/46a22029b6913a1e3059220a30cc370e7aa0721d
 -lib tink_macro
 -lib tink_svgspec
--cp ${HAXE_LIBCACHE}/tink_domspec/0.5.2/github/04f917b6be227b9ca3524ff251987f80a44b4d1f/src
+-cp ${HAXE_LIBCACHE}/tink_domspec/0.5.2/github/46a22029b6913a1e3059220a30cc370e7aa0721d/src
 -D tink_domspec=0.5.2
