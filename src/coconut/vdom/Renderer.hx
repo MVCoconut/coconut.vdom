@@ -43,6 +43,26 @@ private class DomCursor extends Cursor<Node> {
     return cur;
 
   public function insert(real:Node) {
+    if (wasReplaced(real))
+      switch translationAhead() {
+        case null:
+        case translation if (real.nodeValue == untyped real.__coconutText):
+          // Unchanged: the translation stands in for our node, so the page keeps showing it. It stays unmarked, so it
+          // is found again on the next render.
+          place(translation);
+          return;
+        case translation:
+          // Changed: drop the stale translation and put ours back with the new text. Putting ours back alone would
+          // leave the translation behind as a copy, on every render.
+          if (translation == cur) cur = cur.nextSibling;
+          parent.removeChild(translation);
+      }
+
+    untyped real.__coconutText = if (real.nodeType == Node.TEXT_NODE) real.nodeValue else true;
+    place(real);
+  }
+
+  function place(real:Node) {
     if (cur == null)
       parent.appendChild(real);
     else if (cur == real)
@@ -71,11 +91,29 @@ private class DomCursor extends Cursor<Node> {
         for (k in handler.keys())
           v.removeEventListener(k, handler[k]);
       }
+      js.Syntax.delete(v, '__coconutText');// a removed node that comes back (a pooled marker) is a fresh insert
       var next = v.nextSibling;
       parent.removeChild(v);
       v = next;
     }
     cur = v;
+  }
+
+  // A text node this renderer inserted and did not remove, now out of the page: someone else took it out. Page
+  // translators do that, putting a text node with the translation in its place (Safari, Edge, Firefox) or a <font>
+  // element (Google).
+  static function wasReplaced(real:Node)
+    return real.nodeType == Node.TEXT_NODE && real.parentNode == null && untyped real.__coconutText != null;
+
+  // Where the replacement should be: at the cursor, after any of our nodes still waiting to be deleted (deletes run at
+  // the end of an update).
+  function translationAhead():Null<Node> {
+    var n = cur;
+    while (n != null && untyped n.__coconutText != null)
+      n = n.nextSibling;
+    return
+      if (n != null && (n.nodeType == Node.TEXT_NODE || n.nodeName == 'FONT')) n;
+      else null;
   }
 
   #if !coconut.vdom.terse_assert
